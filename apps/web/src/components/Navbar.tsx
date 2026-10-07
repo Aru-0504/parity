@@ -37,9 +37,6 @@ export const Navbar: React.FC = () => {
                 <span className="font-extrabold text-xl tracking-tight text-[#2F4156]">
                   Parity
                 </span>
-                <span className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#EBF2F5] text-[#567C8D] border border-[#C8D9E6]">
-                  SaaS
-                </span>
               </div>
             </Link>
 
