@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "ProjectPulse",
+    "slug": "projectpulse-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#090d16"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ismo.projectpulse"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#090d16"
+      },
+      "package": "com.ismo.projectpulse"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "projectpulse-ismo"
+      }
+    }
+  }
+}

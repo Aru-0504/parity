@@ -1,0 +1,435 @@
+import React, { useState, useEffect } from 'react';
+import { apiClient } from '../api/client';
+import { Badge } from '../components/Badge';
+import { Modal } from '../components/Modal';
+import {
+  CheckSquare,
+  Search,
+  Filter,
+  Calendar,
+  Trash2,
+  Edit2,
+  CheckCircle,
+  Circle,
+  AlertCircle,
+  FolderKanban,
+} from 'lucide-react';
+import { TaskDto, TaskPriorityType, TaskStatusType, ProjectDto } from '@ismo/shared';
+
+export const TasksPage: React.FC = () => {
+  const [tasks, setTasks] = useState<TaskDto[]>([]);
+  const [projects, setProjects] = useState<ProjectDto[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Filters
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('');
+
+  // Modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<TaskDto | null>(null);
+  const [projectId, setProjectId] = useState('');
+  const [taskName, setTaskName] = useState('');
+  const [taskDesc, setTaskDesc] = useState('');
+  const [taskPriority, setTaskPriority] = useState<TaskPriorityType>('MEDIUM');
+  const [taskStatus, setTaskStatus] = useState<TaskStatusType>('PENDING');
+  const [taskDueDate, setTaskDueDate] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const fetchTasksAndProjects = async () => {
+    try {
+      setLoading(true);
+      const params: any = {};
+      if (search) params.search = search;
+      if (statusFilter) params.status = statusFilter;
+      if (priorityFilter) params.priority = priorityFilter;
+
+      const [tasksRes, projectsRes] = await Promise.all([
+        apiClient.get('/tasks', { params }),
+        apiClient.get('/projects'),
+      ]);
+
+      if (tasksRes.data.success) {
+        setTasks(tasksRes.data.data);
+      }
+      if (projectsRes.data.success) {
+        setProjects(projectsRes.data.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch tasks', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTasksAndProjects();
+  }, [search, statusFilter, priorityFilter]);
+
+  const openCreateModal = () => {
+    setEditingTask(null);
+    setProjectId(projects[0]?.id || '');
+    setTaskName('');
+    setTaskDesc('');
+    setTaskPriority('MEDIUM');
+    setTaskStatus('PENDING');
+    setTaskDueDate('');
+    setFormError(null);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (task: TaskDto) => {
+    setEditingTask(task);
+    setProjectId(task.projectId);
+    setTaskName(task.name);
+    setTaskDesc(task.description || '');
+    setTaskPriority(task.priority);
+    setTaskStatus(task.status);
+    setTaskDueDate(task.dueDate ? task.dueDate.split('T')[0] : '');
+    setFormError(null);
+    setIsModalOpen(true);
+  };
+
+  const handleToggleStatus = async (task: TaskDto) => {
+    try {
+      const newStatus: TaskStatusType =
+        task.status === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
+      await apiClient.put(`/tasks/${task.id}`, { status: newStatus });
+      fetchTasksAndProjects();
+    } catch (err) {
+      console.error('Failed to toggle status', err);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Delete this task?')) return;
+    try {
+      await apiClient.delete(`/tasks/${id}`);
+      fetchTasksAndProjects();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to delete task');
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+    if (!projectId) {
+      setFormError('Please select a project');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const payload = {
+        projectId,
+        name: taskName,
+        description: taskDesc || null,
+        priority: taskPriority,
+        status: taskStatus,
+        dueDate: taskDueDate ? new Date(taskDueDate).toISOString() : null,
+      };
+
+      if (editingTask) {
+        await apiClient.put(`/tasks/${editingTask.id}`, payload);
+      } else {
+        await apiClient.post('/tasks', payload);
+      }
+      setIsModalOpen(false);
+      fetchTasksAndProjects();
+    } catch (err: any) {
+      setFormError(err.response?.data?.message || 'Failed to save task');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            All Tasks
+          </h1>
+          <p className="text-slate-400 text-sm mt-1">
+            Global search, filtering, and priority tracking across all initiatives
+          </p>
+        </div>
+
+        <button
+          onClick={openCreateModal}
+          disabled={projects.length === 0}
+          className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-semibold text-xs shadow-lg shadow-emerald-500/20 transition flex items-center justify-center space-x-2 disabled:opacity-50"
+        >
+          <CheckSquare className="w-4 h-4" />
+          <span>New Task</span>
+        </button>
+      </div>
+
+      {/* Filter and Search Bar */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="relative">
+          <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-500" />
+          <input
+            type="text"
+            placeholder="Search tasks by name..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-emerald-500"
+          />
+        </div>
+
+        <div className="relative">
+          <Filter className="w-4 h-4 absolute left-3.5 top-3 text-slate-500 pointer-events-none" />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full pl-10 pr-8 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:outline-none focus:border-emerald-500 appearance-none"
+          >
+            <option value="">Filter by Status (All)</option>
+            <option value="PENDING">Pending</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="COMPLETED">Completed</option>
+          </select>
+        </div>
+
+        <div className="relative">
+          <Filter className="w-4 h-4 absolute left-3.5 top-3 text-slate-500 pointer-events-none" />
+          <select
+            value={priorityFilter}
+            onChange={(e) => setPriorityFilter(e.target.value)}
+            className="w-full pl-10 pr-8 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:outline-none focus:border-emerald-500 appearance-none"
+          >
+            <option value="">Filter by Priority (All)</option>
+            <option value="HIGH">High Priority</option>
+            <option value="MEDIUM">Medium Priority</option>
+            <option value="LOW">Low Priority</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Tasks Table / List */}
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      ) : tasks.length === 0 ? (
+        <div className="text-center py-16 glass-card rounded-2xl border border-slate-800">
+          <CheckSquare className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+          <h3 className="text-base font-bold text-white">No tasks found</h3>
+          <p className="text-slate-400 text-xs mt-1">
+            {search || statusFilter || priorityFilter
+              ? 'Try relaxing search criteria'
+              : 'Create a task or add one inside a project'}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {tasks.map((task) => {
+            const isCompleted = task.status === 'COMPLETED';
+            return (
+              <div
+                key={task.id}
+                className={`glass-card rounded-2xl p-4 sm:p-5 border transition flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${
+                  isCompleted
+                    ? 'border-emerald-500/20 bg-emerald-950/10'
+                    : 'border-slate-800/80 hover:border-slate-700'
+                }`}
+              >
+                <div className="flex items-start space-x-3.5 flex-1 min-w-0">
+                  <button
+                    onClick={() => handleToggleStatus(task)}
+                    className="text-slate-500 hover:text-emerald-400 transition mt-0.5 flex-shrink-0"
+                  >
+                    {isCompleted ? (
+                      <CheckCircle className="w-5 h-5 text-emerald-400" />
+                    ) : (
+                      <Circle className="w-5 h-5" />
+                    )}
+                  </button>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <span
+                        className={`text-sm font-semibold truncate ${
+                          isCompleted ? 'text-slate-400 line-through' : 'text-white'
+                        }`}
+                      >
+                        {task.name}
+                      </span>
+
+                      {task.project && (
+                        <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-slate-800 text-[11px] text-slate-400 font-medium">
+                          <FolderKanban className="w-3 h-3 text-indigo-400" />
+                          <span>{task.project.name}</span>
+                        </span>
+                      )}
+                    </div>
+
+                    {task.description && (
+                      <p className="text-xs text-slate-400 line-clamp-2">
+                        {task.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between sm:justify-end space-x-3 pt-2 sm:pt-0 border-t sm:border-0 border-slate-800">
+                  <div className="flex items-center space-x-2">
+                    <Badge type="priority" value={task.priority} />
+                    <Badge type="status" value={task.status} />
+                  </div>
+
+                  {task.dueDate && (
+                    <span className="flex items-center space-x-1 text-xs text-slate-400">
+                      <Calendar className="w-3 h-3 text-slate-500" />
+                      <span>{new Date(task.dueDate).toLocaleDateString()}</span>
+                    </span>
+                  )}
+
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={() => openEditModal(task)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(task.id)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Task Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingTask ? 'Edit Task' : 'Create New Task'}
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {formError && (
+            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center space-x-2 text-rose-400 text-xs">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{formError}</span>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1">
+              Select Project *
+            </label>
+            <select
+              value={projectId}
+              onChange={(e) => setProjectId(e.target.value)}
+              className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-emerald-500"
+            >
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1">
+              Task Title *
+            </label>
+            <input
+              type="text"
+              required
+              value={taskName}
+              onChange={(e) => setTaskName(e.target.value)}
+              placeholder="e.g. Write integration test specs"
+              className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1">
+              Description
+            </label>
+            <textarea
+              rows={3}
+              value={taskDesc}
+              onChange={(e) => setTaskDesc(e.target.value)}
+              placeholder="Task details and deliverables..."
+              className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">
+                Priority
+              </label>
+              <select
+                value={taskPriority}
+                onChange={(e) => setTaskPriority(e.target.value as TaskPriorityType)}
+                className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-emerald-500"
+              >
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">
+                Status
+              </label>
+              <select
+                value={taskStatus}
+                onChange={(e) => setTaskStatus(e.target.value as TaskStatusType)}
+                className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-emerald-500"
+              >
+                <option value="PENDING">Pending</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="COMPLETED">Completed</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1">
+              Due Date
+            </label>
+            <input
+              type="date"
+              value={taskDueDate}
+              onChange={(e) => setTaskDueDate(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+
+          <div className="pt-3 flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(false)}
+              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-semibold shadow-md shadow-emerald-500/20 transition disabled:opacity-50"
+            >
+              {submitting ? 'Saving...' : editingTask ? 'Update Task' : 'Create Task'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+    </div>
+  );
+};
