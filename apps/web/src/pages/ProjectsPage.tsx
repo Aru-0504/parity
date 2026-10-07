@@ -15,6 +15,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { ProjectDto, ProjectStatusType } from '@ismo/shared';
+import { useLiveSync } from '../context/LiveSyncContext';
 
 export const ProjectsPage: React.FC = () => {
   const [projects, setProjects] = useState<ProjectDto[]>([]);
@@ -23,6 +24,7 @@ export const ProjectsPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<ProjectDto | null>(null);
+  const { subscribe } = useLiveSync();
 
   // Form states
   const [name, setName] = useState('');
@@ -54,6 +56,13 @@ export const ProjectsPage: React.FC = () => {
   useEffect(() => {
     fetchProjects();
   }, [search, statusFilter]);
+
+  useEffect(() => {
+    const unsubscribe = subscribe(() => {
+      fetchProjects();
+    });
+    return unsubscribe;
+  }, [subscribe]);
 
   const openCreateModal = () => {
     setEditingProject(null);
@@ -203,12 +212,29 @@ export const ProjectsPage: React.FC = () => {
                   <h3 className="text-base font-bold text-white group-hover:text-emerald-400 transition line-clamp-1">
                     {project.name}
                   </h3>
-                  <Badge type="status" value={project.status} />
+                  <div className="flex items-center space-x-1.5 flex-shrink-0">
+                    {project.health && <Badge type="health" value={project.health} />}
+                    <Badge type="status" value={project.status} />
+                  </div>
                 </div>
 
                 <p className="text-slate-400 text-xs line-clamp-2 min-h-[32px]">
                   {project.description || 'No description provided.'}
                 </p>
+
+                {/* Completion progress bar */}
+                <div className="mt-4">
+                  <div className="flex justify-between text-[11px] text-slate-400 mb-1">
+                    <span>Completion</span>
+                    <span className="font-semibold text-slate-300">{project.completionPercentage ?? 0}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-500 to-indigo-500 rounded-full transition-all duration-300"
+                      style={{ width: `${project.completionPercentage ?? 0}%` }}
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="mt-6 pt-4 border-t border-slate-800/80 flex items-center justify-between">

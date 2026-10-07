@@ -14,13 +14,16 @@ import {
   AlertCircle,
   Edit2,
 } from 'lucide-react';
-import { TaskDto, TaskPriorityType, TaskStatusType } from '@ismo/shared';
+import { TaskDto, TaskPriorityType, TaskStatusType, ActivityLogDto } from '@ismo/shared';
+import { useLiveSync } from '../context/LiveSyncContext';
 
 export const ProjectDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { subscribe } = useLiveSync();
 
   const [project, setProject] = useState<any>(null);
+  const [activities, setActivities] = useState<ActivityLogDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,9 +42,15 @@ export const ProjectDetailPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await apiClient.get(`/projects/${id}`);
+      const [res, actRes] = await Promise.all([
+        apiClient.get(`/projects/${id}`),
+        apiClient.get(`/activity?projectId=${id}&limit=10`),
+      ]);
       if (res.data.success) {
         setProject(res.data.data);
+      }
+      if (actRes.data.success) {
+        setActivities(actRes.data.data);
       }
     } catch (err: any) {
       if (err.response?.status === 404) {
@@ -57,6 +66,13 @@ export const ProjectDetailPage: React.FC = () => {
   useEffect(() => {
     if (id) fetchProjectDetails();
   }, [id]);
+
+  useEffect(() => {
+    const unsubscribe = subscribe(() => {
+      fetchProjectDetails();
+    });
+    return unsubscribe;
+  }, [subscribe, id]);
 
   const openCreateTaskModal = () => {
     setEditingTask(null);
@@ -175,8 +191,9 @@ export const ProjectDetailPage: React.FC = () => {
       <div className="glass-card rounded-2xl p-6 border border-slate-800">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
-            <div className="flex items-center space-x-3 mb-2">
+            <div className="flex items-center space-x-2.5 mb-2">
               <h1 className="text-2xl font-black text-white">{project.name}</h1>
+              {project.health && <Badge type="health" value={project.health} />}
               <Badge type="status" value={project.status} />
             </div>
             <p className="text-slate-400 text-sm max-w-2xl">
@@ -309,6 +326,28 @@ export const ProjectDetailPage: React.FC = () => {
                 </div>
               );
             })}
+          </div>
+        )}
+      </div>
+
+      {/* Project Activity Timeline */}
+      <div className="glass-card rounded-2xl p-6 border border-slate-800">
+        <h2 className="text-base font-bold text-white mb-4">Project Activity Log</h2>
+        {activities.length === 0 ? (
+          <p className="text-xs text-slate-500 py-3 text-center">No activity logged for this project yet.</p>
+        ) : (
+          <div className="space-y-3">
+            {activities.map((act) => (
+              <div key={act.id} className="flex items-start space-x-3 text-xs">
+                <div className="w-2 h-2 rounded-full bg-indigo-400 mt-1.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-slate-200 font-medium">{act.message}</p>
+                  <p className="text-slate-500 text-[10px] mt-0.5">
+                    {new Date(act.createdAt).toLocaleTimeString()} &bull; {new Date(act.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

@@ -16,13 +16,15 @@ import {
   Clock,
   Activity,
   Layers,
-  LogOut,
+  CheckCircle,
+  Target,
 } from 'lucide-react-native';
 import { DashboardStats } from '@ismo/shared';
 
 export const DashboardScreen = () => {
   const { user, logout } = useMobileAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [focusTasks, setFocusTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -31,6 +33,7 @@ export const DashboardScreen = () => {
       const res = await mobileApiClient.get('/dashboard');
       if (res.data.success) {
         setStats(res.data.data.stats);
+        setFocusTasks(res.data.data.focusTasks || []);
       }
     } catch (err) {
       console.error('Error fetching mobile dashboard', err);
@@ -39,6 +42,15 @@ export const DashboardScreen = () => {
       setRefreshing(false);
     }
   }, []);
+
+  const handleToggleComplete = async (taskId: string) => {
+    try {
+      await mobileApiClient.put(`/tasks/${taskId}`, { status: 'COMPLETED' });
+      fetchDashboard();
+    } catch (err) {
+      console.error('Failed to complete task', err);
+    }
+  };
 
   useEffect(() => {
     fetchDashboard();
@@ -166,6 +178,37 @@ export const DashboardScreen = () => {
             Low: {stats?.tasksByPriority?.low ?? 0}
           </Text>
         </View>
+      </View>
+
+      {/* Focus Queue: What to do next */}
+      <View style={styles.focusContainer}>
+        <View style={styles.focusHeader}>
+          <Target size={16} color="#f59e0b" />
+          <Text style={styles.focusTitle}>Focus Queue (What to do next)</Text>
+        </View>
+
+        {focusTasks.length === 0 ? (
+          <Text style={styles.focusEmpty}>All caught up! No pending tasks requiring attention.</Text>
+        ) : (
+          focusTasks.map((task) => (
+            <View key={task.id} style={styles.focusItem}>
+              <TouchableOpacity
+                onPress={() => handleToggleComplete(task.id)}
+                style={styles.focusCheck}
+              >
+                <CheckCircle size={20} color="#64748b" />
+              </TouchableOpacity>
+              <View style={styles.focusInfo}>
+                <Text style={styles.focusTaskName} numberOfLines={1}>
+                  {task.name}
+                </Text>
+                <Text style={styles.focusProjectName} numberOfLines={1}>
+                  {task.projectName} &bull; {task.priority} Priority
+                </Text>
+              </View>
+            </View>
+          ))
+        )}
       </View>
 
       <Text style={styles.pullHint}>Pull down to refresh metrics anytime</Text>
@@ -310,6 +353,55 @@ const styles = StyleSheet.create({
   breakdownText: {
     fontSize: 11,
     color: '#94a3b8',
+  },
+  focusContainer: {
+    backgroundColor: '#111827',
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 16,
+  },
+  focusHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  focusTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  focusEmpty: {
+    fontSize: 12,
+    color: '#64748b',
+    textAlign: 'center',
+    paddingVertical: 12,
+  },
+  focusItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1e293b',
+    gap: 12,
+  },
+  focusCheck: {
+    padding: 4,
+  },
+  focusInfo: {
+    flex: 1,
+  },
+  focusTaskName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#e2e8f0',
+  },
+  focusProjectName: {
+    fontSize: 11,
+    color: '#94a3b8',
+    marginTop: 2,
   },
   pullHint: {
     textAlign: 'center',

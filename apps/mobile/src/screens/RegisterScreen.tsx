@@ -67,7 +67,7 @@ export const RegisterScreen = ({ navigation }: any) => {
 
         <View style={styles.header}>
           <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join ProjectPulse to organize your workload</Text>
+          <Text style={styles.subtitle}>Join Parity to organize your workload</Text>
         </View>
 
         {error && (

@@ -5,9 +5,11 @@ import {
   UpdateProjectInput,
   ProjectQueryParams,
   ErrorCode,
-  ProjectStatusType,
+  calculateProjectHealth,
 } from '@ismo/shared';
 import { Prisma } from '@prisma/client';
+import { sseService } from '../services/sse.service';
+import { logActivity } from '../services/activity.service';
 
 export const getProjects = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -39,6 +41,9 @@ export const getProjects = async (req: Request, res: Response, next: NextFunctio
         skip,
         take,
         include: {
+          tasks: {
+            select: { status: true },
+          },
           _count: {
             select: { tasks: true },
           },
@@ -47,15 +52,37 @@ export const getProjects = async (req: Request, res: Response, next: NextFunctio
       prisma.project.count({ where: whereClause }),
     ]);
 
-    res.status(200).json({
-      success: true,
-      data: projects.map((p) => ({
-        ...p,
+    const formattedProjects = projects.map((p) => {
+      const totalTasks = p.tasks.length;
+      const completedTasks = p.tasks.filter((t) => t.status === 'COMPLETED').length;
+      const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+      const health = calculateProjectHealth({
+        status: p.status as any,
+        endDate: p.endDate ? p.endDate.toISOString() : null,
+        completionPercentage,
+      });
+
+      return {
+        id: p.id,
+        userId: p.userId,
+        name: p.name,
+        description: p.description,
+        status: p.status,
         startDate: p.startDate ? p.startDate.toISOString() : null,
         endDate: p.endDate ? p.endDate.toISOString() : null,
         createdAt: p.createdAt.toISOString(),
         updatedAt: p.updatedAt.toISOString(),
-      })),
+        completionPercentage,
+        health,
+        _count: {
+          tasks: p._count.tasks,
+        },
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: formattedProjects,
       pagination: {
         page: Number(page),
         limit: Number(limit),
@@ -97,6 +124,15 @@ export const getProjectById = async (req: Request, res: Response, next: NextFunc
       return;
     }
 
+    const totalTasks = project.tasks.length;
+    const completedTasks = project.tasks.filter((t) => t.status === 'COMPLETED').length;
+    const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    const health = calculateProjectHealth({
+      status: project.status as any,
+      endDate: project.endDate ? project.endDate.toISOString() : null,
+      completionPercentage,
+    });
+
     res.status(200).json({
       success: true,
       data: {
@@ -105,6 +141,8 @@ export const getProjectById = async (req: Request, res: Response, next: NextFunc
         endDate: project.endDate ? project.endDate.toISOString() : null,
         createdAt: project.createdAt.toISOString(),
         updatedAt: project.updatedAt.toISOString(),
+        completionPercentage,
+        health,
         tasks: project.tasks.map((t) => ({
           ...t,
           dueDate: t.dueDate ? t.dueDate.toISOString() : null,
@@ -139,16 +177,39 @@ export const createProject = async (req: Request, res: Response, next: NextFunct
       },
     });
 
+    const projectDto = {
+      ...project,
+      startDate: project.startDate ? project.startDate.toISOString() : null,
+      endDate: project.endDate ? project.endDate.toISOString() : null,
+      createdAt: project.createdAt.toISOString(),
+      updatedAt: project.updatedAt.toISOString(),
+      completionPercentage: 0,
+      health: calculateProjectHealth({
+        status: project.status as any,
+        endDate: project.endDate ? project.endDate.toISOString() : null,
+        completionPercentage: 0,
+      }),
+    };
+
+    sseService.broadcastToUser(userId, {
+      type: 'PROJECT_CREATED',
+      timestamp: new Date().toISOString(),
+      data: projectDto,
+    });
+
+    logActivity({
+      userId,
+      projectId: project.id,
+      action: 'PROJECT_CREATED',
+      entityType: 'PROJECT',
+      entityId: project.id,
+      message: `Created project "${project.name}"`,
+    });
+
     res.status(201).json({
       success: true,
       message: 'Project created successfully',
-      data: {
-        ...project,
-        startDate: project.startDate ? project.startDate.toISOString() : null,
-        endDate: project.endDate ? project.endDate.toISOString() : null,
-        createdAt: project.createdAt.toISOString(),
-        updatedAt: project.updatedAt.toISOString(),
-      },
+      data: projectDto,
     });
   } catch (error) {
     next(error);
@@ -163,6 +224,9 @@ export const updateProject = async (req: Request, res: Response, next: NextFunct
 
     const existingProject = await prisma.project.findFirst({
       where: { id, userId },
+      include: {
+        tasks: { select: { status: true } },
+      },
     });
 
     if (!existingProject) {
@@ -186,22 +250,51 @@ export const updateProject = async (req: Request, res: Response, next: NextFunct
       where: { id },
       data: updateData,
       include: {
+        tasks: { select: { status: true } },
         _count: {
           select: { tasks: true },
         },
       },
     });
 
+    const totalTasks = updated.tasks.length;
+    const completedTasks = updated.tasks.filter((t) => t.status === 'COMPLETED').length;
+    const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    const health = calculateProjectHealth({
+      status: updated.status as any,
+      endDate: updated.endDate ? updated.endDate.toISOString() : null,
+      completionPercentage,
+    });
+
+    const updatedDto = {
+      ...updated,
+      startDate: updated.startDate ? updated.startDate.toISOString() : null,
+      endDate: updated.endDate ? updated.endDate.toISOString() : null,
+      createdAt: updated.createdAt.toISOString(),
+      updatedAt: updated.updatedAt.toISOString(),
+      completionPercentage,
+      health,
+    };
+
+    sseService.broadcastToUser(userId, {
+      type: 'PROJECT_UPDATED',
+      timestamp: new Date().toISOString(),
+      data: updatedDto,
+    });
+
+    logActivity({
+      userId,
+      projectId: updated.id,
+      action: 'PROJECT_UPDATED',
+      entityType: 'PROJECT',
+      entityId: updated.id,
+      message: `Updated project "${updated.name}"`,
+    });
+
     res.status(200).json({
       success: true,
       message: 'Project updated successfully',
-      data: {
-        ...updated,
-        startDate: updated.startDate ? updated.startDate.toISOString() : null,
-        endDate: updated.endDate ? updated.endDate.toISOString() : null,
-        createdAt: updated.createdAt.toISOString(),
-        updatedAt: updated.updatedAt.toISOString(),
-      },
+      data: updatedDto,
     });
   } catch (error) {
     next(error);
@@ -228,6 +321,21 @@ export const deleteProject = async (req: Request, res: Response, next: NextFunct
 
     await prisma.project.delete({
       where: { id },
+    });
+
+    sseService.broadcastToUser(userId, {
+      type: 'PROJECT_DELETED',
+      timestamp: new Date().toISOString(),
+      data: { id },
+    });
+
+    logActivity({
+      userId,
+      projectId: null,
+      action: 'PROJECT_DELETED',
+      entityType: 'PROJECT',
+      entityId: id,
+      message: `Deleted project "${existingProject.name}"`,
     });
 
     res.status(200).json({

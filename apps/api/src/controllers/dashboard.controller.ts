@@ -52,6 +52,24 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
       }),
     ]);
 
+    // Focus View: Active tasks requiring immediate attention (High priority & due soonest)
+    const focusTasks = await prisma.task.findMany({
+      where: {
+        userId,
+        status: { not: 'COMPLETED' },
+      },
+      orderBy: [
+        { dueDate: 'asc' },
+        { priority: 'desc' },
+      ],
+      take: 6,
+      include: {
+        project: {
+          select: { id: true, name: true },
+        },
+      },
+    });
+
     res.status(200).json({
       success: true,
       data: {
@@ -83,6 +101,15 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
           status: p.status,
           createdAt: p.createdAt.toISOString(),
           taskCount: p._count.tasks,
+        })),
+        focusTasks: focusTasks.map((t) => ({
+          id: t.id,
+          name: t.name,
+          priority: t.priority,
+          status: t.status,
+          dueDate: t.dueDate ? t.dueDate.toISOString() : null,
+          projectName: t.project?.name || 'Project',
+          projectId: t.projectId,
         })),
       },
     });

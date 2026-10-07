@@ -62,7 +62,7 @@ export const LoginScreen = ({ navigation }: any) => {
           <View style={styles.iconContainer}>
             <FolderKanban size={32} color="#ffffff" />
           </View>
-          <Text style={styles.title}>ProjectPulse</Text>
+          <Text style={styles.title}>Parity</Text>
           <Text style={styles.subtitle}>Mobile Project & Task Management</Text>
         </View>
 

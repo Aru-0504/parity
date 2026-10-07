@@ -49,8 +49,8 @@ export const LoginPage: React.FC = () => {
           <div className="inline-flex w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-indigo-600 items-center justify-center shadow-xl shadow-indigo-500/20 mb-4">
             <FolderKanban className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Welcome Back</h1>
-          <p className="text-slate-400 mt-2 text-sm">Sign in to manage projects and track tasks</p>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">Sign in to Parity</h1>
+          <p className="text-slate-400 mt-2 text-sm">Unified cross-platform project & task management</p>
         </div>
 
         {isExpired && (

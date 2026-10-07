@@ -1,6 +1,22 @@
-# ProjectPulse — Unified Project Management System (Web + Mobile)
+# Parity — Unified Project Management Platform (Web + Mobile)
 
-A production-grade, full-stack project management platform consisting of an **Express REST API**, a **React (Vite) Web Application**, and a **React Native (Expo) Mobile Application**, powered by a shared **PostgreSQL** database and shared TypeScript / Zod validation contracts.
+[![CI](https://github.com/Aru-0504/parity/actions/workflows/ci.yml/badge.svg)](https://github.com/Aru-0504/parity/actions/workflows/ci.yml)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React_18-20232A?logo=react&logoColor=61DAFB)
+![Expo](https://img.shields.io/badge/Expo_SDK_51-000020?logo=expo&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma_ORM-2D3748?logo=prisma&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?logo=postgresql&logoColor=white)
+
+**Repository**: [https://github.com/Aru-0504/parity](https://github.com/Aru-0504/parity)
+
+**Parity** is a production-grade, full-stack project management platform consisting of an **Express REST API**, a **React (Vite) Web Application**, and a **React Native (Expo) Mobile Application**, powered by a shared **PostgreSQL** database and shared TypeScript / Zod validation contracts.
+
+### ✨ Standout Features Beyond the Spec
+1. **Live Cross-Device Sync (SSE)**: Instant sub-second real-time sync across web and mobile using Server-Sent Events (`/api/events`). When a task is added or updated on Web, it reflects live on Mobile without needing manual reload (with pull-to-refresh as a reliable fallback).
+2. **Smart Focus Queue ("What to do next?")**: Automatically ranks active tasks across all projects by urgency and priority (`HIGH` $\rightarrow$ `MEDIUM` $\rightarrow$ `LOW`).
+3. **Deterministic Project Health**: Live computation of project trajectory (`ON_TRACK`, `AT_RISK`, `OVERDUE`) based on schedule timeline and completion percentage.
+4. **Audit Trail & Activity Log**: Real-time project activity timeline recording all state changes and task completions.
+5. **Architectural Decision Records & Security Report**: Documented in [`DECISIONS.md`](file:///DECISIONS.md) and [`SECURITY.md`](file:///SECURITY.md).
 
 ---
 
@@ -19,7 +35,8 @@ A production-grade, full-stack project management platform consisting of an **Ex
 9. [Automated Integration Tests](#automated-integration-tests)
 10. [Building the Android APK](#building-the-android-apk)
 11. [Cross-Platform Sync Demo Video Script](#cross-platform-sync-demo-video-script)
-12. [API Specification & ER Diagram](#api-specification--er-diagram)
+12. [Architectural Decision Records & Security](#architectural-decision-records--security)
+13. [Deliverable Links & References](#deliverable-links--references)
 
 ---
 
@@ -247,8 +264,18 @@ Follow this 5-minute walkthrough to demonstrate end-to-end sync:
 
 ---
 
+## 🏛 Architectural Decision Records & Security
+
+- **Architectural Decision Records (ADRs)**: [`DECISIONS.md`](file:///DECISIONS.md) detailing why Prisma, why Monorepo, why SSE over WebSockets, and state definitions.
+- **Security & Threat Model Verification**: [`SECURITY.md`](file:///SECURITY.md) detailing bcrypt, rate limiting, and automated multi-tenant isolation proofs.
+
+---
+
 ## 📚 Deliverable Links & References
 
+- **GitHub Repository**: [https://github.com/Aru-0504/parity](https://github.com/Aru-0504/parity)
+- **Architecture Decisions**: [`DECISIONS.md`](file:///DECISIONS.md)
+- **Security Policy & Tests**: [`SECURITY.md`](file:///SECURITY.md)
 - **API Documentation**: [`docs/api-documentation.md`](file:///docs/api-documentation.md)
 - **Postman Collection**: [`docs/postman_collection.json`](file:///docs/postman_collection.json)
 - **Database Schema & ERD**: [`docs/schema-erd.md`](file:///docs/schema-erd.md)

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { Badge } from '../components/Badge';
+import { useLiveSync } from '../context/LiveSyncContext';
 import {
   FolderKanban,
   CheckCircle2,
@@ -10,32 +11,58 @@ import {
   Layers,
   ArrowRight,
   TrendingUp,
+  Target,
+  Zap,
+  Calendar,
+  CheckCircle,
 } from 'lucide-react';
-import { DashboardStats } from '@ismo/shared';
+import { DashboardStats, ActivityLogDto } from '@ismo/shared';
 
 export const DashboardPage: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentProjects, setRecentProjects] = useState<any[]>([]);
+  const [focusTasks, setFocusTasks] = useState<any[]>([]);
+  const [activities, setActivities] = useState<ActivityLogDto[]>([]);
   const [loading, setLoading] = useState(true);
+  const { subscribe } = useLiveSync();
 
-  const fetchDashboard = async () => {
+  const fetchDashboard = useCallback(async () => {
     try {
-      setLoading(true);
-      const res = await apiClient.get('/dashboard');
-      if (res.data.success) {
-        setStats(res.data.data.stats);
-        setRecentProjects(res.data.data.recentProjects || []);
+      const [dashRes, actRes] = await Promise.all([
+        apiClient.get('/dashboard'),
+        apiClient.get('/activity?limit=6'),
+      ]);
+      if (dashRes.data.success) {
+        setStats(dashRes.data.data.stats);
+        setRecentProjects(dashRes.data.data.recentProjects || []);
+        setFocusTasks(dashRes.data.data.focusTasks || []);
+      }
+      if (actRes.data.success) {
+        setActivities(actRes.data.data);
       }
     } catch (err) {
       console.error('Error fetching dashboard', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchDashboard();
-  }, []);
+    const unsubscribe = subscribe(() => {
+      fetchDashboard();
+    });
+    return unsubscribe;
+  }, [fetchDashboard, subscribe]);
+
+  const handleToggleTask = async (taskId: string) => {
+    try {
+      await apiClient.put(`/tasks/${taskId}`, { status: 'COMPLETED' });
+      fetchDashboard();
+    } catch (err) {
+      console.error('Failed to complete task', err);
+    }
+  };
 
   if (loading) {
     return (
@@ -291,6 +318,104 @@ export const DashboardPage: React.FC = () => {
                     <span>{new Date(project.createdAt).toLocaleDateString()}</span>
                   </div>
                 </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Smart Focus View & Real-time Activity Feed */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Focus Queue ("What should I do next?") */}
+        <div className="glass-card rounded-2xl p-6 border border-slate-800">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2.5">
+              <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <Target className="w-4 h-4" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-white">Focus Queue</h2>
+                <p className="text-xs text-slate-400">Urgent tasks to complete next</p>
+              </div>
+            </div>
+            <Link to="/tasks" className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center space-x-1">
+              <span>All tasks</span>
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+
+          {focusTasks.length === 0 ? (
+            <div className="py-8 text-center text-slate-500 text-xs">
+              <CheckCircle className="w-8 h-8 mx-auto mb-2 text-emerald-500/60" />
+              All caught up! No urgent pending tasks.
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {focusTasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition"
+                >
+                  <div className="flex items-center space-x-3 truncate">
+                    <button
+                      onClick={() => handleToggleTask(task.id)}
+                      title="Mark complete"
+                      className="w-5 h-5 rounded-full border-2 border-slate-600 hover:border-emerald-400 hover:bg-emerald-500/20 flex items-center justify-center transition flex-shrink-0"
+                    >
+                      <CheckCircle className="w-3.5 h-3.5 text-transparent hover:text-emerald-400" />
+                    </button>
+                    <div className="truncate">
+                      <p className="text-sm font-medium text-slate-200 truncate">{task.name}</p>
+                      <p className="text-[11px] text-slate-400 truncate">{task.projectName}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 flex-shrink-0">
+                    <Badge type="priority" value={task.priority} />
+                    {task.dueDate && (
+                      <span className="text-[11px] text-slate-400 flex items-center space-x-1">
+                        <Calendar className="w-3 h-3 text-slate-500" />
+                        <span>{new Date(task.dueDate).toLocaleDateString()}</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Live Activity Timeline */}
+        <div className="glass-card rounded-2xl p-6 border border-slate-800">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2.5">
+              <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                <Activity className="w-4 h-4" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-white">Live Activity Feed</h2>
+                <p className="text-xs text-slate-400">Real-time audit log & system events</p>
+              </div>
+            </div>
+            <span className="text-[11px] text-emerald-400 font-medium flex items-center space-x-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>Live</span>
+            </span>
+          </div>
+
+          {activities.length === 0 ? (
+            <p className="py-8 text-center text-slate-500 text-xs">No activity recorded yet</p>
+          ) : (
+            <div className="space-y-3">
+              {activities.map((act) => (
+                <div key={act.id} className="flex items-start space-x-3 text-xs">
+                  <div className="w-2 h-2 rounded-full bg-indigo-400 mt-1.5 flex-shrink-0"></div>
+                  <div className="flex-1">
+                    <p className="text-slate-200 font-medium">{act.message}</p>
+                    <p className="text-slate-500 text-[10px] mt-0.5">
+                      {new Date(act.createdAt).toLocaleTimeString()} &bull; {new Date(act.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
               ))}
             </div>
           )}

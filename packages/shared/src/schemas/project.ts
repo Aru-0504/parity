@@ -118,6 +118,33 @@ export type CreateProjectInput = z.infer<typeof createProjectSchema>;
 export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
 export type ProjectQueryParams = z.infer<typeof projectQuerySchema>;
 
+export type ProjectHealth = 'ON_TRACK' | 'AT_RISK' | 'OVERDUE';
+
+export function calculateProjectHealth(project: {
+  status: ProjectStatusType;
+  endDate?: string | null;
+  completionPercentage?: number;
+}): ProjectHealth {
+  if (project.status === 'COMPLETED') return 'ON_TRACK';
+  if (!project.endDate) return 'ON_TRACK';
+
+  const end = new Date(project.endDate).getTime();
+  const now = Date.now();
+  const completion = project.completionPercentage ?? 0;
+
+  if (now > end && completion < 100) {
+    return 'OVERDUE';
+  }
+
+  const msRemaining = end - now;
+  const daysRemaining = msRemaining / (1000 * 60 * 60 * 24);
+  if (daysRemaining <= 3 && daysRemaining >= 0 && completion < 50) {
+    return 'AT_RISK';
+  }
+
+  return 'ON_TRACK';
+}
+
 export interface ProjectDto {
   id: string;
   userId: string;
@@ -128,6 +155,8 @@ export interface ProjectDto {
   endDate: string | null;
   createdAt: string;
   updatedAt: string;
+  completionPercentage?: number;
+  health?: ProjectHealth;
   _count?: {
     tasks: number;
   };

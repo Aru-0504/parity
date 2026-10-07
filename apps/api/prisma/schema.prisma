@@ -35,23 +35,25 @@ model User {
 
   projects     Project[]
   tasks        Task[]
+  activityLogs ActivityLog[]
 
   @@map("users")
 }
 
 model Project {
-  id          String        @id @default(uuid())
-  userId      String
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name        String
-  description String?
-  status      ProjectStatus @default(NOT_STARTED)
-  startDate   DateTime?
-  endDate     DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id           String        @id @default(uuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
+  status       ProjectStatus @default(NOT_STARTED)
+  startDate    DateTime?
+  endDate      DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
-  tasks       Task[]
+  tasks        Task[]
+  activityLogs ActivityLog[]
 
   @@index([userId])
   @@index([status])
@@ -77,4 +79,22 @@ model Task {
   @@index([status])
   @@index([priority])
   @@map("tasks")
+}
+
+model ActivityLog {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId  String?
+  project    Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  action     String
+  entityType String
+  entityId   String
+  message    String
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([createdAt])
+  @@map("activity_logs")
 }

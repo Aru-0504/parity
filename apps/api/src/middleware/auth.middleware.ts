@@ -24,18 +24,23 @@ export const authenticate = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
+  let token: string | undefined;
   const authHeader = req.headers.authorization;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } else if (typeof req.query.token === 'string') {
+    token = req.query.token;
+  }
+
+  if (!token) {
     res.status(401).json({
       success: false,
       code: ErrorCode.UNAUTHORIZED,
-      message: 'Authorization header missing or invalid format',
+      message: 'Authorization token missing (provide Bearer header or token query parameter)',
     });
     return;
   }
-
-  const token = authHeader.split(' ')[1];
   const { payload, isExpired } = verifyToken(token);
 
   if (isExpired) {

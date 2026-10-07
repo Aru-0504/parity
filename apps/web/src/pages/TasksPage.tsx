@@ -15,11 +15,13 @@ import {
   FolderKanban,
 } from 'lucide-react';
 import { TaskDto, TaskPriorityType, TaskStatusType, ProjectDto } from '@ismo/shared';
+import { useLiveSync } from '../context/LiveSyncContext';
 
 export const TasksPage: React.FC = () => {
   const [tasks, setTasks] = useState<TaskDto[]>([]);
   const [projects, setProjects] = useState<ProjectDto[]>([]);
   const [loading, setLoading] = useState(true);
+  const { subscribe } = useLiveSync();
 
   // Filters
   const [search, setSearch] = useState('');
@@ -67,6 +69,13 @@ export const TasksPage: React.FC = () => {
   useEffect(() => {
     fetchTasksAndProjects();
   }, [search, statusFilter, priorityFilter]);
+
+  useEffect(() => {
+    const unsubscribe = subscribe(() => {
+      fetchTasksAndProjects();
+    });
+    return unsubscribe;
+  }, [subscribe]);
 
   const openCreateModal = () => {
     setEditingTask(null);

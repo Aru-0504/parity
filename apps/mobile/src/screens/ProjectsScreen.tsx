@@ -121,6 +121,29 @@ export const ProjectsScreen = ({ navigation }: any) => {
     );
   };
 
+  const getHealthBadge = (health?: string) => {
+    if (!health) return null;
+    let color = '#34d399';
+    let bg = 'rgba(52, 211, 153, 0.15)';
+    let label = 'On Track';
+
+    if (health === 'OVERDUE') {
+      color = '#f87171';
+      bg = 'rgba(239, 68, 68, 0.15)';
+      label = 'Overdue';
+    } else if (health === 'AT_RISK') {
+      color = '#fbbf24';
+      bg = 'rgba(251, 191, 36, 0.15)';
+      label = 'At Risk';
+    }
+
+    return (
+      <View style={[styles.badge, { backgroundColor: bg, marginRight: 6 }]}>
+        <Text style={[styles.badgeText, { color, fontWeight: '700' }]}>{label}</Text>
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container}>
       {/* Search Header */}
@@ -190,7 +213,10 @@ export const ProjectsScreen = ({ navigation }: any) => {
                 <Text style={styles.cardTitle} numberOfLines={1}>
                   {item.name}
                 </Text>
-                {getStatusBadge(item.status)}
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  {getHealthBadge(item.health)}
+                  {getStatusBadge(item.status)}
+                </View>
               </View>
 
               {item.description ? (
@@ -198,6 +224,13 @@ export const ProjectsScreen = ({ navigation }: any) => {
                   {item.description}
                 </Text>
               ) : null}
+
+              {/* Completion Progress Bar */}
+              <View style={{ marginTop: 8, marginBottom: 4 }}>
+                <View style={{ height: 4, backgroundColor: '#1e293b', borderRadius: 2, overflow: 'hidden' }}>
+                  <View style={{ height: '100%', width: `${item.completionPercentage ?? 0}%`, backgroundColor: '#10b981', borderRadius: 2 }} />
+                </View>
+              </View>
 
               <View style={styles.cardFooter}>
                 <View style={styles.footerInfo}>

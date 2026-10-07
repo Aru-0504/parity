@@ -7,6 +7,8 @@ import {
   ErrorCode,
 } from '@ismo/shared';
 import { Prisma } from '@prisma/client';
+import { sseService } from '../services/sse.service';
+import { logActivity } from '../services/activity.service';
 
 export const getTasks = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -166,15 +168,32 @@ export const createTask = async (req: Request, res: Response, next: NextFunction
       },
     });
 
+    const taskDto = {
+      ...task,
+      dueDate: task.dueDate ? task.dueDate.toISOString() : null,
+      createdAt: task.createdAt.toISOString(),
+      updatedAt: task.updatedAt.toISOString(),
+    };
+
+    sseService.broadcastToUser(userId, {
+      type: 'TASK_CREATED',
+      timestamp: new Date().toISOString(),
+      data: taskDto,
+    });
+
+    logActivity({
+      userId,
+      projectId: task.projectId,
+      action: 'TASK_CREATED',
+      entityType: 'TASK',
+      entityId: task.id,
+      message: `Created task "${task.name}"`,
+    });
+
     res.status(201).json({
       success: true,
       message: 'Task created successfully',
-      data: {
-        ...task,
-        dueDate: task.dueDate ? task.dueDate.toISOString() : null,
-        createdAt: task.createdAt.toISOString(),
-        updatedAt: task.updatedAt.toISOString(),
-      },
+      data: taskDto,
     });
   } catch (error) {
     next(error);
@@ -248,15 +267,41 @@ export const updateTask = async (req: Request, res: Response, next: NextFunction
       },
     });
 
+    const updatedDto = {
+      ...updatedTask,
+      dueDate: updatedTask.dueDate ? updatedTask.dueDate.toISOString() : null,
+      createdAt: updatedTask.createdAt.toISOString(),
+      updatedAt: updatedTask.updatedAt.toISOString(),
+    };
+
+    sseService.broadcastToUser(userId, {
+      type: 'TASK_UPDATED',
+      timestamp: new Date().toISOString(),
+      data: updatedDto,
+    });
+
+    let actionMsg = `Updated task "${updatedTask.name}"`;
+    if (status && status !== existingTask.status) {
+      if (status === 'COMPLETED') {
+        actionMsg = `Marked task "${updatedTask.name}" as Completed`;
+      } else {
+        actionMsg = `Moved task "${updatedTask.name}" to ${status.replace('_', ' ')}`;
+      }
+    }
+
+    logActivity({
+      userId,
+      projectId: updatedTask.projectId,
+      action: 'TASK_UPDATED',
+      entityType: 'TASK',
+      entityId: updatedTask.id,
+      message: actionMsg,
+    });
+
     res.status(200).json({
       success: true,
       message: 'Task updated successfully',
-      data: {
-        ...updatedTask,
-        dueDate: updatedTask.dueDate ? updatedTask.dueDate.toISOString() : null,
-        createdAt: updatedTask.createdAt.toISOString(),
-        updatedAt: updatedTask.updatedAt.toISOString(),
-      },
+      data: updatedDto,
     });
   } catch (error) {
     next(error);
@@ -286,6 +331,21 @@ export const deleteTask = async (req: Request, res: Response, next: NextFunction
 
     await prisma.task.delete({
       where: { id },
+    });
+
+    sseService.broadcastToUser(userId, {
+      type: 'TASK_DELETED',
+      timestamp: new Date().toISOString(),
+      data: { id, projectId: existingTask.projectId },
+    });
+
+    logActivity({
+      userId,
+      projectId: existingTask.projectId,
+      action: 'TASK_DELETED',
+      entityType: 'TASK',
+      entityId: id,
+      message: `Deleted task "${existingTask.name}"`,
     });
 
     res.status(200).json({

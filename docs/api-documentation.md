@@ -219,7 +219,42 @@ All endpoints returning protected resources require the HTTP header:
 
 ---
 
-## 5. Security & Error Response Format
+## 5. Real-Time Events & Audit Logs
+
+### `GET /api/events` (Server-Sent Events)
+Establishes a persistent, unidirectional real-time event stream.
+- **Headers / Query**: `Authorization: Bearer <token>` OR `?token=<token>`
+- **Content-Type**: `text/event-stream`
+- **Events emitted**:
+  - `CONNECTED`: Initial handshake.
+  - `TASK_CREATED`: Fired when a task is created.
+  - `TASK_UPDATED`: Fired when a task status/details change.
+  - `TASK_DELETED`: Fired when a task is removed.
+  - `PROJECT_CREATED` / `PROJECT_UPDATED` / `PROJECT_DELETED`: Fired on project mutations.
+  - `ACTIVITY_LOGGED`: Fired on any audited user action.
+
+### `GET /api/activity`
+Retrieve recent activity log timeline for the authenticated user.
+- **Query params**: `projectId` (optional), `limit` (default: 30)
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "id": "uuid",
+        "action": "TASK_UPDATED",
+        "message": "Marked task \"API Design\" as Completed",
+        "createdAt": "2026-10-07T12:00:00.000Z",
+        "project": { "id": "uuid", "name": "Mobile Launch" }
+      }
+    ]
+  }
+  ```
+
+---
+
+## 6. Security & Error Response Format
 
 All error responses strictly adhere to:
 ```json

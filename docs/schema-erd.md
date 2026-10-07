@@ -8,7 +8,9 @@ This project uses **PostgreSQL** normalized to the 3rd Normal Form (3NF) and man
 erDiagram
     USERS ||--o{ PROJECTS : "owns (1:N)"
     USERS ||--o{ TASKS : "owns (1:N)"
+    USERS ||--o{ ACTIVITY_LOGS : "performed (1:N)"
     PROJECTS ||--o{ TASKS : "contains (1:N, ON DELETE CASCADE)"
+    PROJECTS ||--o{ ACTIVITY_LOGS : "audits (0:N, ON DELETE CASCADE)"
 
     USERS {
         String id PK "UUID"
@@ -42,6 +44,17 @@ erDiagram
         DateTime dueDate "Optional due timestamp"
         DateTime createdAt "Auto timestamp"
         DateTime updatedAt "Auto timestamp"
+    }
+
+    ACTIVITY_LOGS {
+        String id PK "UUID"
+        String userId FK "References USERS.id (CASCADE)"
+        String projectId FK "Optional FK to PROJECTS.id (CASCADE)"
+        String action "TASK_CREATED | TASK_UPDATED | PROJECT_CREATED..."
+        String entityType "TASK | PROJECT"
+        String entityId "Target UUID"
+        String message "Human-readable audit message"
+        DateTime createdAt "Auto timestamp"
     }
 ```
 

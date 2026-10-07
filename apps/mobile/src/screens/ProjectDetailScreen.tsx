@@ -38,11 +38,19 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
   const [status, setStatus] = useState<'PENDING' | 'IN_PROGRESS' | 'COMPLETED'>('PENDING');
   const [submitting, setSubmitting] = useState(false);
 
+  const [activities, setActivities] = useState<any[]>([]);
+
   const fetchProjectDetails = useCallback(async () => {
     try {
-      const res = await mobileApiClient.get(`/projects/${id}`);
+      const [res, actRes] = await Promise.all([
+        mobileApiClient.get(`/projects/${id}`),
+        mobileApiClient.get(`/activity?projectId=${id}&limit=8`),
+      ]);
       if (res.data.success) {
         setProject(res.data.data);
+      }
+      if (actRes.data.success) {
+        setActivities(actRes.data.data);
       }
     } catch (err: any) {
       if (err.response?.status === 404) {
@@ -141,6 +149,29 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
     );
   };
 
+  const getHealthBadge = (health?: string) => {
+    if (!health) return null;
+    let color = '#34d399';
+    let bg = 'rgba(52, 211, 153, 0.15)';
+    let label = 'On Track';
+
+    if (health === 'OVERDUE') {
+      color = '#f87171';
+      bg = 'rgba(239, 68, 68, 0.15)';
+      label = 'Overdue';
+    } else if (health === 'AT_RISK') {
+      color = '#fbbf24';
+      bg = 'rgba(251, 191, 36, 0.15)';
+      label = 'At Risk';
+    }
+
+    return (
+      <View style={[styles.badge, { backgroundColor: bg, marginRight: 6 }]}>
+        <Text style={[styles.badgeText, { color, fontWeight: '700' }]}>{label}</Text>
+      </View>
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -176,7 +207,13 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View style={styles.summaryCard}>
-            <Text style={styles.projectTitle}>{project?.name}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+              <Text style={styles.projectTitle}>{project?.name}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {getHealthBadge(project?.health)}
+                {getStatusBadge(project?.status)}
+              </View>
+            </View>
             {project?.description ? (
               <Text style={styles.projectDesc}>{project.description}</Text>
             ) : null}
@@ -192,6 +229,26 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
                 <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
               </View>
             </View>
+          </View>
+        }
+        ListFooterComponent={
+          <View style={styles.activityContainer}>
+            <Text style={styles.activityTitle}>Project Activity History</Text>
+            {activities.length === 0 ? (
+              <Text style={styles.activityEmpty}>No recorded activity yet</Text>
+            ) : (
+              activities.map((act) => (
+                <View key={act.id} style={styles.activityItem}>
+                  <View style={styles.activityDot} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.activityMessage}>{act.message}</Text>
+                    <Text style={styles.activityTime}>
+                      {new Date(act.createdAt).toLocaleTimeString()} &bull; {new Date(act.createdAt).toLocaleDateString()}
+                    </Text>
+                  </View>
+                </View>
+              ))
+            )}
           </View>
         }
         ListEmptyComponent={
@@ -578,5 +635,51 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 14,
     fontWeight: '700',
+  },
+  activityContainer: {
+    backgroundColor: '#111827',
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 20,
+    marginBottom: 40,
+  },
+  activityTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#ffffff',
+    marginBottom: 12,
+  },
+  activityEmpty: {
+    fontSize: 12,
+    color: '#64748b',
+    textAlign: 'center',
+    paddingVertical: 10,
+  },
+  activityItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1e293b',
+    gap: 10,
+  },
+  activityDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#818cf8',
+    marginTop: 4,
+  },
+  activityMessage: {
+    fontSize: 12,
+    color: '#e2e8f0',
+    fontWeight: '500',
+  },
+  activityTime: {
+    fontSize: 10,
+    color: '#64748b',
+    marginTop: 2,
   },
 });

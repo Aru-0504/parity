@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { LiveSyncProvider } from './context/LiveSyncContext';
 import { Navbar } from './components/Navbar';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
@@ -55,7 +56,8 @@ const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) 
 export const App: React.FC = () => {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <LiveSyncProvider>
+        <BrowserRouter>
         <Routes>
           {/* Public Auth routes */}
           <Route
@@ -113,6 +115,7 @@ export const App: React.FC = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+      </LiveSyncProvider>
     </AuthProvider>
   );
 };

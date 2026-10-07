@@ -43,7 +43,7 @@ export const RegisterPage: React.FC = () => {
             <FolderKanban className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight">Create an Account</h1>
-          <p className="text-slate-400 mt-2 text-sm">Get started with unified task & project tracking</p>
+          <p className="text-slate-400 mt-2 text-sm">Join Parity — unified task & project tracking</p>
         </div>
 
         {error && (
