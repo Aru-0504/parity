@@ -18,8 +18,10 @@ import {
   Layers,
   CheckCircle,
   Target,
+  LogOut,
 } from 'lucide-react-native';
 import { DashboardStats } from '@ismo/shared';
+import { theme } from '../theme/colors';
 
 export const DashboardScreen = () => {
   const { user, logout } = useMobileAuth();
@@ -79,7 +81,7 @@ export const DashboardScreen = () => {
       style={styles.container}
       contentContainerStyle={styles.content}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#10b981" />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.navy} />
       }
     >
       {/* User Greeting & Logout */}
@@ -90,7 +92,7 @@ export const DashboardScreen = () => {
         </View>
 
         <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
-          <LogOut size={16} color="#f87171" />
+          <LogOut size={16} color={theme.rosewood} />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
@@ -103,7 +105,7 @@ export const DashboardScreen = () => {
         <View style={styles.statCard}>
           <View style={styles.cardHeader}>
             <Text style={styles.statLabel}>PROJECTS</Text>
-            <FolderKanban size={16} color="#818cf8" />
+            <FolderKanban size={16} color={theme.navy} />
           </View>
           <Text style={styles.statValue}>{stats?.totalProjects ?? 0}</Text>
           <Text style={styles.statSub}>Total Managed</Text>
@@ -113,7 +115,7 @@ export const DashboardScreen = () => {
         <View style={styles.statCard}>
           <View style={styles.cardHeader}>
             <Text style={styles.statLabel}>TASKS</Text>
-            <Layers size={16} color="#60a5fa" />
+            <Layers size={16} color={theme.teal} />
           </View>
           <Text style={styles.statValue}>{stats?.totalTasks ?? 0}</Text>
           <Text style={styles.statSub}>Total Assigned</Text>
@@ -123,9 +125,9 @@ export const DashboardScreen = () => {
         <View style={styles.statCard}>
           <View style={styles.cardHeader}>
             <Text style={styles.statLabel}>COMPLETED</Text>
-            <CheckCircle2 size={16} color="#34d399" />
+            <CheckCircle2 size={16} color={theme.sage} />
           </View>
-          <Text style={[styles.statValue, { color: '#34d399' }]}>
+          <Text style={[styles.statValue, { color: theme.sage }]}>
             {stats?.completedTasks ?? 0}
           </Text>
           <Text style={styles.statSub}>{completionRate}% Complete</Text>
@@ -135,9 +137,9 @@ export const DashboardScreen = () => {
         <View style={styles.statCard}>
           <View style={styles.cardHeader}>
             <Text style={styles.statLabel}>PENDING</Text>
-            <Clock size={16} color="#fbbf24" />
+            <Clock size={16} color={theme.amber} />
           </View>
-          <Text style={[styles.statValue, { color: '#fbbf24' }]}>
+          <Text style={[styles.statValue, { color: theme.amber }]}>
             {stats?.pendingTasks ?? 0}
           </Text>
           <Text style={styles.statSub}>Action Required</Text>
@@ -147,9 +149,9 @@ export const DashboardScreen = () => {
         <View style={[styles.statCard, { width: '100%' }]}>
           <View style={styles.cardHeader}>
             <Text style={styles.statLabel}>PROJECTS IN PROGRESS</Text>
-            <Activity size={16} color="#c084fc" />
+            <Activity size={16} color={theme.rosewood} />
           </View>
-          <Text style={[styles.statValue, { color: '#c084fc' }]}>
+          <Text style={[styles.statValue, { color: theme.rosewood }]}>
             {stats?.inProgressProjects ?? 0}
           </Text>
           <Text style={styles.statSub}>Currently Active Initiatives</Text>
@@ -229,45 +231,46 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#090d16',
+    backgroundColor: theme.canvas,
   },
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
-    paddingTop: 8,
+    marginBottom: 20,
+    marginTop: 4,
   },
   greeting: {
     fontSize: 12,
-    color: '#94a3b8',
+    color: theme.textSecondary,
     fontWeight: '500',
   },
   userName: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
-    color: '#ffffff',
+    color: theme.textPrimary,
+    marginTop: 2,
   },
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    backgroundColor: theme.rosewoodBg,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.25)',
+    borderColor: theme.rosewoodBorder,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 10,
+    borderRadius: 12,
   },
   logoutText: {
-    color: '#f87171',
+    color: theme.rosewood,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
     marginLeft: 6,
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#e2e8f0',
+    fontWeight: '800',
+    color: theme.textPrimary,
     marginBottom: 12,
     letterSpacing: 0.3,
   },
@@ -278,12 +281,17 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   statCard: {
-    backgroundColor: '#111827',
+    backgroundColor: theme.card,
     borderWidth: 1,
-    borderColor: '#1e293b',
-    borderRadius: 16,
+    borderColor: theme.border,
+    borderRadius: 18,
     padding: 14,
     width: '48%',
+    shadowColor: theme.navy,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 1,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -294,26 +302,32 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#94a3b8',
+    color: theme.textSecondary,
     letterSpacing: 0.5,
   },
   statValue: {
     fontSize: 24,
     fontWeight: '900',
-    color: '#ffffff',
+    color: theme.textPrimary,
   },
   statSub: {
     fontSize: 10,
-    color: '#64748b',
+    color: theme.textMuted,
     marginTop: 4,
+    fontWeight: '600',
   },
   progressCard: {
-    backgroundColor: '#111827',
+    backgroundColor: theme.card,
     borderWidth: 1,
-    borderColor: '#1e293b',
-    borderRadius: 16,
+    borderColor: theme.border,
+    borderRadius: 18,
     padding: 16,
     marginTop: 16,
+    shadowColor: theme.navy,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 1,
   },
   progressHeader: {
     flexDirection: 'row',
@@ -323,24 +337,24 @@ const styles = StyleSheet.create({
   },
   progressTitle: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#ffffff',
+    fontWeight: '800',
+    color: theme.textPrimary,
   },
   progressPercent: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#34d399',
+    color: theme.sage,
   },
   progressBarBg: {
     height: 8,
-    backgroundColor: '#1e293b',
+    backgroundColor: theme.border,
     borderRadius: 4,
     overflow: 'hidden',
     marginBottom: 12,
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#10b981',
+    backgroundColor: theme.navy,
     borderRadius: 4,
   },
   breakdownRow: {
@@ -348,19 +362,25 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#1e293b',
+    borderTopColor: theme.border,
   },
   breakdownText: {
     fontSize: 11,
-    color: '#94a3b8',
+    color: theme.textSecondary,
+    fontWeight: '600',
   },
   focusContainer: {
-    backgroundColor: '#111827',
+    backgroundColor: theme.card,
     borderWidth: 1,
-    borderColor: '#1e293b',
-    borderRadius: 16,
+    borderColor: theme.border,
+    borderRadius: 18,
     padding: 16,
     marginTop: 16,
+    shadowColor: theme.navy,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 1,
   },
   focusHeader: {
     flexDirection: 'row',
@@ -370,12 +390,12 @@ const styles = StyleSheet.create({
   },
   focusTitle: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#ffffff',
+    fontWeight: '800',
+    color: theme.textPrimary,
   },
   focusEmpty: {
     fontSize: 12,
-    color: '#64748b',
+    color: theme.textMuted,
     textAlign: 'center',
     paddingVertical: 12,
   },
@@ -384,7 +404,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
+    borderBottomColor: theme.borderLight,
     gap: 12,
   },
   focusCheck: {
@@ -395,18 +415,19 @@ const styles = StyleSheet.create({
   },
   focusTaskName: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#e2e8f0',
+    fontWeight: '700',
+    color: theme.textPrimary,
   },
   focusProjectName: {
     fontSize: 11,
-    color: '#94a3b8',
+    color: theme.textSecondary,
     marginTop: 2,
   },
   pullHint: {
     textAlign: 'center',
-    color: '#475569',
+    color: theme.textMuted,
     fontSize: 11,
     marginTop: 20,
+    fontWeight: '500',
   },
 });

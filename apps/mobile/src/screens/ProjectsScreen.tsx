@@ -22,6 +22,7 @@ import {
   ChevronRight,
 } from 'lucide-react-native';
 import { ProjectDto } from '@ismo/shared';
+import { theme } from '../theme/colors';
 
 const STATUS_FILTERS = [
   { label: 'All', value: '' },
@@ -100,22 +101,25 @@ export const ProjectsScreen = ({ navigation }: any) => {
   };
 
   const getStatusBadge = (st: string) => {
-    let color = '#94a3b8';
-    let bg = 'rgba(148, 163, 184, 0.15)';
+    let color = theme.teal;
+    let bg = theme.skyLight;
+    let border = theme.border;
     let label = 'Not Started';
 
     if (st === 'COMPLETED') {
-      color = '#34d399';
-      bg = 'rgba(52, 211, 153, 0.15)';
+      color = theme.sage;
+      bg = theme.sageBg;
+      border = theme.sageBorder;
       label = 'Completed';
     } else if (st === 'IN_PROGRESS') {
-      color = '#fbbf24';
-      bg = 'rgba(251, 191, 36, 0.15)';
+      color = theme.amber;
+      bg = theme.amberBg;
+      border = theme.amberBorder;
       label = 'In Progress';
     }
 
     return (
-      <View style={[styles.badge, { backgroundColor: bg }]}>
+      <View style={[styles.badge, { backgroundColor: bg, borderColor: border, borderWidth: 1 }]}>
         <Text style={[styles.badgeText, { color }]}>{label}</Text>
       </View>
     );
@@ -123,22 +127,25 @@ export const ProjectsScreen = ({ navigation }: any) => {
 
   const getHealthBadge = (health?: string) => {
     if (!health) return null;
-    let color = '#34d399';
-    let bg = 'rgba(52, 211, 153, 0.15)';
+    let color = theme.sage;
+    let bg = theme.sageBg;
+    let border = theme.sageBorder;
     let label = 'On Track';
 
     if (health === 'OVERDUE') {
-      color = '#f87171';
-      bg = 'rgba(239, 68, 68, 0.15)';
+      color = theme.rosewood;
+      bg = theme.rosewoodBg;
+      border = theme.rosewoodBorder;
       label = 'Overdue';
     } else if (health === 'AT_RISK') {
-      color = '#fbbf24';
-      bg = 'rgba(251, 191, 36, 0.15)';
+      color = theme.amber;
+      bg = theme.amberBg;
+      border = theme.amberBorder;
       label = 'At Risk';
     }
 
     return (
-      <View style={[styles.badge, { backgroundColor: bg, marginRight: 6 }]}>
+      <View style={[styles.badge, { backgroundColor: bg, borderColor: border, borderWidth: 1, marginRight: 6 }]}>
         <Text style={[styles.badgeText, { color, fontWeight: '700' }]}>{label}</Text>
       </View>
     );
@@ -148,17 +155,17 @@ export const ProjectsScreen = ({ navigation }: any) => {
     <View style={styles.container}>
       {/* Search Header */}
       <View style={styles.searchContainer}>
-        <Search size={16} color="#64748b" style={styles.searchIcon} />
+        <Search size={16} color={theme.teal} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search projects by name..."
-          placeholderTextColor="#64748b"
+          placeholderTextColor={theme.textMuted}
           value={search}
           onChangeText={setSearch}
         />
         {search.length > 0 && (
           <TouchableOpacity onPress={() => setSearch('')}>
-            <X size={16} color="#64748b" />
+            <X size={16} color={theme.teal} />
           </TouchableOpacity>
         )}
       </View>
@@ -186,7 +193,7 @@ export const ProjectsScreen = ({ navigation }: any) => {
       {/* Projects List with Pull-to-Refresh */}
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#10b981" />
+          <ActivityIndicator size="large" color={theme.navy} />
         </View>
       ) : (
         <FlatList
@@ -197,7 +204,7 @@ export const ProjectsScreen = ({ navigation }: any) => {
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <FolderKanban size={48} color="#334155" />
+              <FolderKanban size={48} color={theme.sky} />
               <Text style={styles.emptyTitle}>No Projects Found</Text>
               <Text style={styles.emptySubtitle}>
                 {search || selectedStatus ? 'Try clearing filters' : 'Tap + to add a project'}
@@ -226,15 +233,15 @@ export const ProjectsScreen = ({ navigation }: any) => {
               ) : null}
 
               {/* Completion Progress Bar */}
-              <View style={{ marginTop: 8, marginBottom: 4 }}>
-                <View style={{ height: 4, backgroundColor: '#1e293b', borderRadius: 2, overflow: 'hidden' }}>
-                  <View style={{ height: '100%', width: `${item.completionPercentage ?? 0}%`, backgroundColor: '#10b981', borderRadius: 2 }} />
+              <View style={{ marginTop: 8, marginBottom: 8 }}>
+                <View style={{ height: 5, backgroundColor: theme.borderLight, borderRadius: 3, overflow: 'hidden' }}>
+                  <View style={{ height: '100%', width: `${item.completionPercentage ?? 0}%`, backgroundColor: theme.sage, borderRadius: 3 }} />
                 </View>
               </View>
 
               <View style={styles.cardFooter}>
                 <View style={styles.footerInfo}>
-                  <Layers size={14} color="#818cf8" />
+                  <Layers size={14} color={theme.teal} />
                   <Text style={styles.footerText}>
                     {item._count?.tasks ?? 0} tasks
                   </Text>
@@ -242,14 +249,14 @@ export const ProjectsScreen = ({ navigation }: any) => {
 
                 {item.endDate && (
                   <View style={styles.footerInfo}>
-                    <Calendar size={14} color="#64748b" />
+                    <Calendar size={14} color={theme.textMuted} />
                     <Text style={styles.footerText}>
                       {new Date(item.endDate).toLocaleDateString()}
                     </Text>
                   </View>
                 )}
 
-                <ChevronRight size={16} color="#475569" />
+                <ChevronRight size={16} color={theme.textMuted} />
               </View>
             </TouchableOpacity>
           )}
@@ -268,7 +275,7 @@ export const ProjectsScreen = ({ navigation }: any) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Create New Project</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <X size={20} color="#94a3b8" />
+                <X size={20} color={theme.teal} />
               </TouchableOpacity>
             </View>
 
@@ -276,7 +283,7 @@ export const ProjectsScreen = ({ navigation }: any) => {
             <TextInput
               style={styles.modalInput}
               placeholder="e.g. Android Release v1"
-              placeholderTextColor="#64748b"
+              placeholderTextColor={theme.textMuted}
               value={name}
               onChangeText={setName}
             />
@@ -285,7 +292,7 @@ export const ProjectsScreen = ({ navigation }: any) => {
             <TextInput
               style={[styles.modalInput, { height: 80, textAlignVertical: 'top' }]}
               placeholder="Project goals & scope..."
-              placeholderTextColor="#64748b"
+              placeholderTextColor={theme.textMuted}
               multiline
               value={description}
               onChangeText={setDescription}
@@ -327,7 +334,7 @@ export const ProjectsScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#090d16',
+    backgroundColor: theme.canvas,
   },
   center: {
     flex: 1,
@@ -337,12 +344,12 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#111827',
+    backgroundColor: theme.card,
     marginHorizontal: 16,
     marginTop: 14,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#1e293b',
+    borderColor: theme.border,
     paddingHorizontal: 12,
   },
   searchIcon: {
@@ -351,7 +358,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     paddingVertical: 10,
-    color: '#ffffff',
+    color: theme.navy,
     fontSize: 13,
   },
   filterBar: {
@@ -362,18 +369,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: '#111827',
+    backgroundColor: theme.card,
     marginRight: 8,
     borderWidth: 1,
-    borderColor: '#1e293b',
+    borderColor: theme.border,
   },
   filterPillActive: {
-    backgroundColor: '#10b981',
-    borderColor: '#10b981',
+    backgroundColor: theme.navy,
+    borderColor: theme.navy,
   },
   filterText: {
     fontSize: 12,
-    color: '#94a3b8',
+    color: theme.teal,
     fontWeight: '600',
   },
   filterTextActive: {
@@ -384,12 +391,16 @@ const styles = StyleSheet.create({
     paddingBottom: 80,
   },
   card: {
-    backgroundColor: '#111827',
+    backgroundColor: theme.card,
     borderWidth: 1,
-    borderColor: '#1e293b',
+    borderColor: theme.border,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 2,
   },
   cardTop: {
     flexDirection: 'row',
@@ -400,7 +411,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#ffffff',
+    color: theme.navy,
     flex: 1,
     marginRight: 8,
   },
@@ -415,7 +426,7 @@ const styles = StyleSheet.create({
   },
   cardDesc: {
     fontSize: 12,
-    color: '#94a3b8',
+    color: theme.teal,
     marginBottom: 12,
     lineHeight: 18,
   },
@@ -425,7 +436,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#1e293b',
+    borderTopColor: theme.borderLight,
   },
   footerInfo: {
     flexDirection: 'row',
@@ -433,7 +444,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 11,
-    color: '#94a3b8',
+    color: theme.teal,
     marginLeft: 6,
   },
   fab: {
@@ -443,13 +454,13 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#10b981',
+    backgroundColor: theme.navy,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#10b981',
-    shadowOpacity: 0.4,
+    shadowColor: theme.navy,
+    shadowOpacity: 0.25,
     shadowRadius: 10,
-    elevation: 8,
+    elevation: 6,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -457,28 +468,28 @@ const styles = StyleSheet.create({
     paddingVertical: 60,
   },
   emptyTitle: {
-    color: '#ffffff',
+    color: theme.navy,
     fontSize: 16,
     fontWeight: '700',
     marginTop: 12,
   },
   emptySubtitle: {
-    color: '#64748b',
+    color: theme.teal,
     fontSize: 12,
     marginTop: 4,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)',
+    backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#111827',
+    backgroundColor: theme.card,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
     borderTopWidth: 1,
-    borderTopColor: '#1e293b',
+    borderTopColor: theme.border,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -489,22 +500,22 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#ffffff',
+    color: theme.navy,
   },
   modalLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#94a3b8',
+    color: theme.teal,
     marginBottom: 6,
   },
   modalInput: {
-    backgroundColor: '#0b0f19',
+    backgroundColor: theme.cardSubtle,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: theme.border,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    color: '#ffffff',
+    color: theme.navy,
     fontSize: 13,
     marginBottom: 16,
   },
@@ -516,27 +527,27 @@ const styles = StyleSheet.create({
   statusChoice: {
     flex: 1,
     paddingVertical: 10,
-    backgroundColor: '#0b0f19',
+    backgroundColor: theme.cardSubtle,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: theme.border,
     borderRadius: 10,
     alignItems: 'center',
     marginHorizontal: 3,
   },
   statusChoiceActive: {
-    backgroundColor: '#10b981',
-    borderColor: '#10b981',
+    backgroundColor: theme.navy,
+    borderColor: theme.navy,
   },
   statusChoiceText: {
     fontSize: 11,
-    color: '#94a3b8',
+    color: theme.teal,
     fontWeight: '600',
   },
   statusChoiceTextActive: {
     color: '#ffffff',
   },
   submitBtn: {
-    backgroundColor: '#10b981',
+    backgroundColor: theme.navy,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',

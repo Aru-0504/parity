@@ -13,6 +13,7 @@ import {
 import { useMobileAuth } from '../context/AuthContext';
 import { mobileApiClient } from '../api/client';
 import { UserPlus, ArrowLeft } from 'lucide-react-native';
+import { theme } from '../theme/colors';
 
 export const RegisterScreen = ({ navigation }: any) => {
   const [fullName, setFullName] = useState('');
@@ -61,7 +62,7 @@ export const RegisterScreen = ({ navigation }: any) => {
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <ArrowLeft size={20} color="#94a3b8" />
+          <ArrowLeft size={20} color={theme.navy} />
           <Text style={styles.backText}>Back to Sign In</Text>
         </TouchableOpacity>
 
@@ -83,7 +84,7 @@ export const RegisterScreen = ({ navigation }: any) => {
             value={fullName}
             onChangeText={setFullName}
             placeholder="Alex Rivera"
-            placeholderTextColor="#64748b"
+            placeholderTextColor={theme.textMuted}
           />
 
           <Text style={styles.label}>EMAIL ADDRESS</Text>
@@ -92,7 +93,7 @@ export const RegisterScreen = ({ navigation }: any) => {
             value={email}
             onChangeText={setEmail}
             placeholder="alex@example.com"
-            placeholderTextColor="#64748b"
+            placeholderTextColor={theme.textMuted}
             keyboardType="email-address"
             autoCapitalize="none"
           />
@@ -103,7 +104,7 @@ export const RegisterScreen = ({ navigation }: any) => {
             value={password}
             onChangeText={setPassword}
             placeholder="••••••••"
-            placeholderTextColor="#64748b"
+            placeholderTextColor={theme.textMuted}
             secureTextEntry
           />
 
@@ -130,7 +131,7 @@ export const RegisterScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#090d16',
+    backgroundColor: theme.canvas,
   },
   scrollContent: {
     flexGrow: 1,
@@ -143,9 +144,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   backText: {
-    color: '#94a3b8',
+    color: theme.teal,
     marginLeft: 8,
     fontSize: 13,
+    fontWeight: '600',
   },
   header: {
     marginBottom: 28,
@@ -153,52 +155,57 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: '800',
-    color: '#ffffff',
+    color: theme.navy,
   },
   subtitle: {
     fontSize: 13,
-    color: '#94a3b8',
+    color: theme.teal,
     marginTop: 6,
   },
   errorBox: {
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    backgroundColor: theme.rosewoodBg,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderColor: theme.rosewoodBorder,
     borderRadius: 12,
     padding: 12,
     marginBottom: 20,
   },
   errorText: {
-    color: '#f87171',
+    color: theme.rosewood,
     fontSize: 13,
+    fontWeight: '600',
   },
   formCard: {
-    backgroundColor: '#111827',
+    backgroundColor: theme.card,
     borderWidth: 1,
-    borderColor: '#1e293b',
+    borderColor: theme.border,
     borderRadius: 20,
     padding: 24,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
   },
   label: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#94a3b8',
+    color: theme.teal,
     letterSpacing: 0.5,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#0b0f19',
+    backgroundColor: theme.cardSubtle,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: theme.border,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    color: '#ffffff',
+    color: theme.navy,
     fontSize: 14,
     marginBottom: 18,
   },
   submitBtn: {
-    backgroundColor: '#10b981',
+    backgroundColor: theme.navy,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',

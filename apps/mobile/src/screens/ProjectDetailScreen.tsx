@@ -22,6 +22,7 @@ import {
   ArrowLeft,
 } from 'lucide-react-native';
 import { TaskDto } from '@ismo/shared';
+import { theme } from '../theme/colors';
 
 export const ProjectDetailScreen = ({ route, navigation }: any) => {
   const { id } = route.params;
@@ -132,18 +133,21 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
   };
 
   const getPriorityBadge = (pr: string) => {
-    let color = '#94a3b8';
-    let bg = 'rgba(148, 163, 184, 0.15)';
+    let color = theme.teal;
+    let bg = theme.skyLight;
+    let border = theme.border;
     if (pr === 'HIGH') {
-      color = '#f87171';
-      bg = 'rgba(239, 68, 68, 0.15)';
+      color = theme.rosewood;
+      bg = theme.rosewoodBg;
+      border = theme.rosewoodBorder;
     } else if (pr === 'MEDIUM') {
-      color = '#818cf8';
-      bg = 'rgba(129, 140, 248, 0.15)';
+      color = theme.navy;
+      bg = theme.sky;
+      border = theme.sky;
     }
 
     return (
-      <View style={[styles.badge, { backgroundColor: bg }]}>
+      <View style={[styles.badge, { backgroundColor: bg, borderColor: border, borderWidth: 1 }]}>
         <Text style={[styles.badgeText, { color }]}>{pr}</Text>
       </View>
     );
@@ -151,23 +155,52 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
 
   const getHealthBadge = (health?: string) => {
     if (!health) return null;
-    let color = '#34d399';
-    let bg = 'rgba(52, 211, 153, 0.15)';
+    let color = theme.sage;
+    let bg = theme.sageBg;
+    let border = theme.sageBorder;
     let label = 'On Track';
 
     if (health === 'OVERDUE') {
-      color = '#f87171';
-      bg = 'rgba(239, 68, 68, 0.15)';
+      color = theme.rosewood;
+      bg = theme.rosewoodBg;
+      border = theme.rosewoodBorder;
       label = 'Overdue';
     } else if (health === 'AT_RISK') {
-      color = '#fbbf24';
-      bg = 'rgba(251, 191, 36, 0.15)';
+      color = theme.amber;
+      bg = theme.amberBg;
+      border = theme.amberBorder;
       label = 'At Risk';
     }
 
     return (
-      <View style={[styles.badge, { backgroundColor: bg, marginRight: 6 }]}>
+      <View style={[styles.badge, { backgroundColor: bg, borderColor: border, borderWidth: 1, marginRight: 6 }]}>
         <Text style={[styles.badgeText, { color, fontWeight: '700' }]}>{label}</Text>
+      </View>
+    );
+  };
+
+  const getStatusBadge = (st?: string) => {
+    if (!st) return null;
+    let color = theme.teal;
+    let bg = theme.skyLight;
+    let border = theme.border;
+    let label = 'Not Started';
+
+    if (st === 'COMPLETED') {
+      color = theme.sage;
+      bg = theme.sageBg;
+      border = theme.sageBorder;
+      label = 'Completed';
+    } else if (st === 'IN_PROGRESS') {
+      color = theme.amber;
+      bg = theme.amberBg;
+      border = theme.amberBorder;
+      label = 'In Progress';
+    }
+
+    return (
+      <View style={[styles.badge, { backgroundColor: bg, borderColor: border, borderWidth: 1 }]}>
+        <Text style={[styles.badgeText, { color }]}>{label}</Text>
       </View>
     );
   };
@@ -175,7 +208,7 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#10b981" />
+        <ActivityIndicator size="large" color={theme.navy} />
       </View>
     );
   }
@@ -189,7 +222,7 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
       {/* Top bar with back button */}
       <View style={styles.headerBar}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <ArrowLeft size={18} color="#94a3b8" />
+          <ArrowLeft size={18} color={theme.teal} />
           <Text style={styles.backText}>Projects</Text>
         </TouchableOpacity>
 
@@ -253,7 +286,7 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Clock size={40} color="#334155" />
+            <Clock size={40} color={theme.sky} />
             <Text style={styles.emptyTitle}>No Tasks Yet</Text>
             <Text style={styles.emptySubtitle}>Tap 'Add Task' to plan activities</Text>
           </View>
@@ -267,9 +300,9 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
                 style={styles.checkBtn}
               >
                 {isDone ? (
-                  <CheckCircle size={22} color="#34d399" />
+                  <CheckCircle size={22} color={theme.sage} />
                 ) : (
-                  <Circle size={22} color="#64748b" />
+                  <Circle size={22} color={theme.teal} />
                 )}
               </TouchableOpacity>
 
@@ -287,7 +320,7 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
                   {getPriorityBadge(item.priority)}
                   {item.dueDate ? (
                     <View style={styles.dateMeta}>
-                      <Calendar size={12} color="#64748b" />
+                      <Calendar size={12} color={theme.textMuted} />
                       <Text style={styles.dateText}>
                         {new Date(item.dueDate).toLocaleDateString()}
                       </Text>
@@ -300,7 +333,7 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
                 onPress={() => handleDeleteTask(item.id)}
                 style={styles.deleteBtn}
               >
-                <Trash2 size={16} color="#ef4444" />
+                <Trash2 size={16} color={theme.rosewood} />
               </TouchableOpacity>
             </View>
           );
@@ -314,7 +347,7 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Add Task to Project</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <X size={20} color="#94a3b8" />
+                <X size={20} color={theme.teal} />
               </TouchableOpacity>
             </View>
 
@@ -322,7 +355,7 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
             <TextInput
               style={styles.modalInput}
               placeholder="e.g. Verify Android Keystore storage"
-              placeholderTextColor="#64748b"
+              placeholderTextColor={theme.textMuted}
               value={taskName}
               onChangeText={setTaskName}
             />
@@ -331,7 +364,7 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
             <TextInput
               style={[styles.modalInput, { height: 70, textAlignVertical: 'top' }]}
               placeholder="Task instructions..."
-              placeholderTextColor="#64748b"
+              placeholderTextColor={theme.textMuted}
               multiline
               value={taskDesc}
               onChangeText={setTaskDesc}
@@ -388,7 +421,7 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#090d16',
+    backgroundColor: theme.canvas,
   },
   center: {
     flex: 1,
@@ -402,14 +435,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
+    borderBottomColor: theme.borderLight,
+    backgroundColor: theme.card,
   },
   backBtn: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   backText: {
-    color: '#94a3b8',
+    color: theme.teal,
     marginLeft: 6,
     fontSize: 13,
     fontWeight: '600',
@@ -417,7 +451,7 @@ const styles = StyleSheet.create({
   addTaskBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#10b981',
+    backgroundColor: theme.navy,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 10,
@@ -433,22 +467,26 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   summaryCard: {
-    backgroundColor: '#111827',
+    backgroundColor: theme.card,
     borderWidth: 1,
-    borderColor: '#1e293b',
+    borderColor: theme.border,
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 2,
   },
   projectTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#ffffff',
+    color: theme.navy,
     marginBottom: 6,
   },
   projectDesc: {
     fontSize: 12,
-    color: '#94a3b8',
+    color: theme.teal,
     lineHeight: 18,
     marginBottom: 12,
   },
@@ -462,37 +500,42 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     fontSize: 11,
-    color: '#94a3b8',
+    color: theme.teal,
   },
   progressPercent: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#34d399',
+    color: theme.navy,
   },
   progressBarBg: {
     height: 6,
-    backgroundColor: '#1e293b',
+    backgroundColor: theme.borderLight,
     borderRadius: 3,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#10b981',
+    backgroundColor: theme.sage,
     borderRadius: 3,
   },
   taskCard: {
-    backgroundColor: '#111827',
+    backgroundColor: theme.card,
     borderWidth: 1,
-    borderColor: '#1e293b',
+    borderColor: theme.border,
     borderRadius: 14,
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.02,
+    shadowRadius: 6,
+    elevation: 1,
   },
   taskCardDone: {
-    backgroundColor: 'rgba(16, 185, 129, 0.05)',
-    borderColor: 'rgba(16, 185, 129, 0.2)',
+    backgroundColor: theme.cardSubtle,
+    borderColor: theme.borderLight,
+    opacity: 0.8,
   },
   checkBtn: {
     marginRight: 12,
@@ -503,15 +546,15 @@ const styles = StyleSheet.create({
   taskTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#ffffff',
+    color: theme.navy,
   },
   taskTitleDone: {
-    color: '#64748b',
+    color: theme.textMuted,
     textDecorationLine: 'line-through',
   },
   taskDesc: {
     fontSize: 11,
-    color: '#94a3b8',
+    color: theme.teal,
     marginTop: 2,
   },
   taskMetaRow: {
@@ -535,7 +578,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 10,
-    color: '#64748b',
+    color: theme.textMuted,
     marginLeft: 4,
   },
   deleteBtn: {
@@ -546,28 +589,28 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   emptyTitle: {
-    color: '#ffffff',
+    color: theme.navy,
     fontSize: 15,
     fontWeight: '700',
     marginTop: 10,
   },
   emptySubtitle: {
-    color: '#64748b',
+    color: theme.teal,
     fontSize: 12,
     marginTop: 4,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)',
+    backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#111827',
+    backgroundColor: theme.card,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
     borderTopWidth: 1,
-    borderTopColor: '#1e293b',
+    borderTopColor: theme.border,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -578,22 +621,22 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#ffffff',
+    color: theme.navy,
   },
   modalLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#94a3b8',
+    color: theme.teal,
     marginBottom: 6,
   },
   modalInput: {
-    backgroundColor: '#0b0f19',
+    backgroundColor: theme.cardSubtle,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: theme.border,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    color: '#ffffff',
+    color: theme.navy,
     fontSize: 13,
     marginBottom: 14,
   },
@@ -605,27 +648,27 @@ const styles = StyleSheet.create({
   choiceBtn: {
     flex: 1,
     paddingVertical: 8,
-    backgroundColor: '#0b0f19',
+    backgroundColor: theme.cardSubtle,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: theme.border,
     borderRadius: 8,
     alignItems: 'center',
     marginHorizontal: 3,
   },
   choiceBtnActive: {
-    backgroundColor: '#10b981',
-    borderColor: '#10b981',
+    backgroundColor: theme.navy,
+    borderColor: theme.navy,
   },
   choiceText: {
     fontSize: 11,
-    color: '#94a3b8',
+    color: theme.teal,
     fontWeight: '600',
   },
   choiceTextActive: {
     color: '#ffffff',
   },
   submitBtn: {
-    backgroundColor: '#10b981',
+    backgroundColor: theme.navy,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
@@ -637,23 +680,27 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   activityContainer: {
-    backgroundColor: '#111827',
+    backgroundColor: theme.card,
     borderWidth: 1,
-    borderColor: '#1e293b',
+    borderColor: theme.border,
     borderRadius: 16,
     padding: 16,
     marginTop: 20,
     marginBottom: 40,
+    shadowColor: '#000',
+    shadowOpacity: 0.02,
+    shadowRadius: 6,
+    elevation: 1,
   },
   activityTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#ffffff',
+    color: theme.navy,
     marginBottom: 12,
   },
   activityEmpty: {
     fontSize: 12,
-    color: '#64748b',
+    color: theme.textMuted,
     textAlign: 'center',
     paddingVertical: 10,
   },
@@ -662,24 +709,24 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
+    borderBottomColor: theme.borderLight,
     gap: 10,
   },
   activityDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#818cf8',
+    backgroundColor: theme.teal,
     marginTop: 4,
   },
   activityMessage: {
     fontSize: 12,
-    color: '#e2e8f0',
+    color: theme.navy,
     fontWeight: '500',
   },
   activityTime: {
     fontSize: 10,
-    color: '#64748b',
+    color: theme.textMuted,
     marginTop: 2,
   },
 });

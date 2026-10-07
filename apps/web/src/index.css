@@ -4,20 +4,16 @@
 
 @layer base {
   body {
-    @apply bg-[#080c14] text-slate-100 min-h-screen overflow-x-hidden antialiased selection:bg-emerald-500 selection:text-white;
-    background-image: 
-      radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.06) 0px, transparent 40%),
-      radial-gradient(at 0% 50%, rgba(99, 102, 241, 0.05) 0px, transparent 40%);
-    background-attachment: fixed;
+    @apply bg-[#F5EFEB] text-[#2F4156] min-h-screen overflow-x-hidden antialiased selection:bg-[#567C8D] selection:text-white;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 }
 
 .glass-card {
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(51, 65, 85, 0.6);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+  background: #FFFFFF;
+  border: 1px solid #E7DFD7;
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 20px -2px rgba(47, 65, 86, 0.05);
 }
 
 .glass-card-hover {
@@ -25,9 +21,9 @@
 }
 
 .glass-card-hover:hover {
-  border-color: rgba(52, 211, 153, 0.4);
+  border-color: #567C8D;
   transform: translateY(-2px);
-  box-shadow: 0 16px 30px -10px rgba(0, 0, 0, 0.6), 0 0 15px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 12px 24px -6px rgba(47, 65, 86, 0.09);
 }
 
 /* Custom scrollbar */
@@ -37,15 +33,15 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #090d16;
+  background: #F5EFEB;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #C8D9E6;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #567C8D;
 }
 

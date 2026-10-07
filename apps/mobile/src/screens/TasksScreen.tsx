@@ -21,6 +21,7 @@ import {
   CheckSquare,
 } from 'lucide-react-native';
 import { TaskDto } from '@ismo/shared';
+import { theme } from '../theme/colors';
 
 const STATUS_FILTERS = [
   { label: 'All Status', value: '' },
@@ -101,18 +102,21 @@ export const TasksScreen = () => {
   };
 
   const getPriorityBadge = (pr: string) => {
-    let color = '#94a3b8';
-    let bg = 'rgba(148, 163, 184, 0.15)';
+    let color = theme.teal;
+    let bg = theme.skyLight;
+    let border = theme.border;
     if (pr === 'HIGH') {
-      color = '#f87171';
-      bg = 'rgba(239, 68, 68, 0.15)';
+      color = theme.rosewood;
+      bg = theme.rosewoodBg;
+      border = theme.rosewoodBorder;
     } else if (pr === 'MEDIUM') {
-      color = '#818cf8';
-      bg = 'rgba(129, 140, 248, 0.15)';
+      color = theme.navy;
+      bg = theme.sky;
+      border = theme.sky;
     }
 
     return (
-      <View style={[styles.badge, { backgroundColor: bg }]}>
+      <View style={[styles.badge, { backgroundColor: bg, borderColor: border, borderWidth: 1 }]}>
         <Text style={[styles.badgeText, { color }]}>{pr}</Text>
       </View>
     );
@@ -122,17 +126,17 @@ export const TasksScreen = () => {
     <View style={styles.container}>
       {/* Search Input */}
       <View style={styles.searchContainer}>
-        <Search size={16} color="#64748b" style={styles.searchIcon} />
+        <Search size={16} color={theme.teal} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search tasks by name..."
-          placeholderTextColor="#64748b"
+          placeholderTextColor={theme.textMuted}
           value={search}
           onChangeText={setSearch}
         />
         {search.length > 0 && (
           <TouchableOpacity onPress={() => setSearch('')}>
-            <X size={16} color="#64748b" />
+            <X size={16} color={theme.teal} />
           </TouchableOpacity>
         )}
       </View>
@@ -177,7 +181,7 @@ export const TasksScreen = () => {
       {/* Tasks List */}
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#10b981" />
+          <ActivityIndicator size="large" color={theme.navy} />
         </View>
       ) : (
         <FlatList
@@ -188,7 +192,7 @@ export const TasksScreen = () => {
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <CheckSquare size={48} color="#334155" />
+              <CheckSquare size={48} color={theme.sky} />
               <Text style={styles.emptyTitle}>No Tasks Found</Text>
               <Text style={styles.emptySubtitle}>
                 {search || statusFilter || priorityFilter
@@ -206,9 +210,9 @@ export const TasksScreen = () => {
                   style={styles.checkBtn}
                 >
                   {isDone ? (
-                    <CheckCircle size={22} color="#34d399" />
+                    <CheckCircle size={22} color={theme.sage} />
                   ) : (
-                    <Circle size={22} color="#64748b" />
+                    <Circle size={22} color={theme.teal} />
                   )}
                 </TouchableOpacity>
 
@@ -224,7 +228,7 @@ export const TasksScreen = () => {
                     {getPriorityBadge(item.priority)}
                     {item.dueDate ? (
                       <View style={styles.dateMeta}>
-                        <Calendar size={12} color="#64748b" />
+                        <Calendar size={12} color={theme.textMuted} />
                         <Text style={styles.dateText}>
                           {new Date(item.dueDate).toLocaleDateString()}
                         </Text>
@@ -237,7 +241,7 @@ export const TasksScreen = () => {
                   onPress={() => handleDeleteTask(item.id)}
                   style={styles.deleteBtn}
                 >
-                  <Trash2 size={16} color="#ef4444" />
+                  <Trash2 size={16} color={theme.rosewood} />
                 </TouchableOpacity>
               </View>
             );
@@ -251,7 +255,7 @@ export const TasksScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#090d16',
+    backgroundColor: theme.canvas,
   },
   center: {
     flex: 1,
@@ -261,12 +265,12 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#111827',
+    backgroundColor: theme.card,
     marginHorizontal: 16,
     marginTop: 14,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#1e293b',
+    borderColor: theme.border,
     paddingHorizontal: 12,
   },
   searchIcon: {
@@ -275,7 +279,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     paddingVertical: 10,
-    color: '#ffffff',
+    color: theme.navy,
     fontSize: 13,
   },
   filterSection: {
@@ -286,18 +290,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 20,
-    backgroundColor: '#111827',
+    backgroundColor: theme.card,
     marginRight: 6,
     borderWidth: 1,
-    borderColor: '#1e293b',
+    borderColor: theme.border,
   },
   filterPillActive: {
-    backgroundColor: '#10b981',
-    borderColor: '#10b981',
+    backgroundColor: theme.navy,
+    borderColor: theme.navy,
   },
   filterText: {
     fontSize: 11,
-    color: '#94a3b8',
+    color: theme.teal,
     fontWeight: '600',
   },
   filterTextActive: {
@@ -308,18 +312,23 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   taskCard: {
-    backgroundColor: '#111827',
+    backgroundColor: theme.card,
     borderWidth: 1,
-    borderColor: '#1e293b',
+    borderColor: theme.border,
     borderRadius: 14,
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.02,
+    shadowRadius: 6,
+    elevation: 1,
   },
   taskCardDone: {
-    backgroundColor: 'rgba(16, 185, 129, 0.05)',
-    borderColor: 'rgba(16, 185, 129, 0.2)',
+    backgroundColor: theme.cardSubtle,
+    borderColor: theme.borderLight,
+    opacity: 0.8,
   },
   checkBtn: {
     marginRight: 12,
@@ -330,17 +339,17 @@ const styles = StyleSheet.create({
   taskTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#ffffff',
+    color: theme.navy,
   },
   taskTitleDone: {
-    color: '#64748b',
+    color: theme.textMuted,
     textDecorationLine: 'line-through',
   },
   projectTag: {
     fontSize: 11,
-    color: '#818cf8',
+    color: theme.teal,
     marginTop: 2,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   metaRow: {
     flexDirection: 'row',
@@ -363,7 +372,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 10,
-    color: '#64748b',
+    color: theme.textMuted,
     marginLeft: 4,
   },
   deleteBtn: {
@@ -374,13 +383,13 @@ const styles = StyleSheet.create({
     paddingVertical: 50,
   },
   emptyTitle: {
-    color: '#ffffff',
+    color: theme.navy,
     fontSize: 15,
     fontWeight: '700',
     marginTop: 10,
   },
   emptySubtitle: {
-    color: '#64748b',
+    color: theme.teal,
     fontSize: 12,
     marginTop: 4,
   },

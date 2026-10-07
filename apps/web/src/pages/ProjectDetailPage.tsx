@@ -180,7 +180,7 @@ export const ProjectDetailPage: React.FC = () => {
       <div className="flex items-center justify-between">
         <button
           onClick={() => navigate('/projects')}
-          className="flex items-center space-x-2 text-xs font-semibold text-slate-400 hover:text-white transition"
+          className="flex items-center space-x-2 text-xs font-semibold text-[#567C8D] hover:text-[#2F4156] transition"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Projects</span>
@@ -188,34 +188,34 @@ export const ProjectDetailPage: React.FC = () => {
       </div>
 
       {/* Project Overview Banner */}
-      <div className="glass-card rounded-2xl p-6 border border-slate-800">
+      <div className="glass-card rounded-2xl p-6 border border-[#E7DFD7]">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
             <div className="flex items-center space-x-2.5 mb-2">
-              <h1 className="text-2xl font-black text-white">{project.name}</h1>
+              <h1 className="text-2xl font-black text-[#2F4156]">{project.name}</h1>
               {project.health && <Badge type="health" value={project.health} />}
               <Badge type="status" value={project.status} />
             </div>
-            <p className="text-slate-400 text-sm max-w-2xl">
+            <p className="text-[#567C8D] text-sm max-w-2xl">
               {project.description || 'No description provided.'}
             </p>
           </div>
 
           <button
             onClick={openCreateTaskModal}
-            className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-semibold text-xs shadow-lg shadow-emerald-500/20 transition flex items-center space-x-2 flex-shrink-0"
+            className="px-4 py-2.5 rounded-xl bg-[#2F4156] hover:bg-[#1E2C3A] text-white font-semibold text-xs shadow-sm transition flex items-center space-x-2 flex-shrink-0"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 text-[#C8D9E6]" />
             <span>Add Task</span>
           </button>
         </div>
 
         {/* Progress & Meta */}
-        <div className="mt-6 pt-6 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="mt-6 pt-6 border-t border-[#E7DFD7] grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <span className="text-xs text-slate-500 block mb-1">Schedule</span>
-            <div className="flex items-center space-x-1.5 text-xs text-slate-300">
-              <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="text-xs text-[#8A9BA8] block mb-1">Schedule</span>
+            <div className="flex items-center space-x-1.5 text-xs text-[#567C8D]">
+              <Calendar className="w-3.5 h-3.5 text-[#567C8D]" />
               <span>
                 {project.startDate ? new Date(project.startDate).toLocaleDateString() : 'Start unset'} -{' '}
                 {project.endDate ? new Date(project.endDate).toLocaleDateString() : 'Ongoing'}
@@ -225,14 +225,14 @@ export const ProjectDetailPage: React.FC = () => {
 
           <div className="sm:col-span-2">
             <div className="flex justify-between items-center text-xs mb-1.5">
-              <span className="text-slate-400">
+              <span className="text-[#567C8D]">
                 Tasks Progress ({completedCount} of {totalCount} completed)
               </span>
-              <span className="font-bold text-emerald-400">{progressPercent}%</span>
+              <span className="font-bold text-[#4E6738]">{progressPercent}%</span>
             </div>
-            <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-[#E7DFD7] rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-emerald-500 to-indigo-500 rounded-full transition-all duration-300"
+                className="h-full bg-gradient-to-r from-[#567C8D] to-[#2F4156] rounded-full transition-all duration-300"
                 style={{ width: `${progressPercent}%` }}
               ></div>
             </div>
@@ -243,15 +243,15 @@ export const ProjectDetailPage: React.FC = () => {
       {/* Tasks List */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white tracking-tight">Project Tasks</h2>
-          <span className="text-xs text-slate-400">{totalCount} tasks total</span>
+          <h2 className="text-lg font-bold text-[#2F4156] tracking-tight">Project Tasks</h2>
+          <span className="text-xs text-[#567C8D]">{totalCount} tasks total</span>
         </div>
 
         {project.tasks?.length === 0 ? (
-          <div className="text-center py-12 glass-card rounded-2xl border border-slate-800">
-            <Clock className="w-10 h-10 text-slate-600 mx-auto mb-2" />
-            <p className="text-sm font-semibold text-white">No tasks yet</p>
-            <p className="text-xs text-slate-400 mt-1">
+          <div className="text-center py-12 glass-card rounded-2xl border border-[#E7DFD7]">
+            <Clock className="w-10 h-10 text-[#8A9BA8] mx-auto mb-2" />
+            <p className="text-sm font-semibold text-[#2F4156]">No tasks yet</p>
+            <p className="text-xs text-[#567C8D] mt-1">
               Add your first task above to track progress.
             </p>
           </div>
@@ -264,33 +264,33 @@ export const ProjectDetailPage: React.FC = () => {
                   key={task.id}
                   className={`glass-card rounded-xl p-4 border transition flex items-center justify-between gap-4 ${
                     isCompleted
-                      ? 'border-emerald-500/20 bg-emerald-950/10'
-                      : 'border-slate-800/80 hover:border-slate-700'
+                      ? 'border-[#CCD8BF] bg-[#F0F5EA]/60'
+                      : 'border-[#E7DFD7] hover:border-[#C8D9E6]'
                   }`}
                 >
                   <div className="flex items-center space-x-3.5 flex-1 min-w-0">
                     <button
                       onClick={() => handleToggleTaskStatus(task)}
                       title={isCompleted ? 'Mark as incomplete' : 'Mark as complete'}
-                      className="text-slate-500 hover:text-emerald-400 transition flex-shrink-0"
+                      className="text-[#8A9BA8] hover:text-[#4E6738] transition flex-shrink-0"
                     >
                       {isCompleted ? (
-                        <CheckCircle className="w-5 h-5 text-emerald-400" />
+                        <CheckCircle className="w-5 h-5 text-[#4E6738]" />
                       ) : (
-                        <Circle className="w-5 h-5" />
+                        <Circle className="w-5 h-5 text-[#C8D9E6] hover:text-[#567C8D]" />
                       )}
                     </button>
 
                     <div className="min-w-0">
                       <p
                         className={`text-sm font-semibold truncate ${
-                          isCompleted ? 'text-slate-400 line-through' : 'text-white'
+                          isCompleted ? 'text-[#8A9BA8] line-through' : 'text-[#2F4156]'
                         }`}
                       >
                         {task.name}
                       </p>
                       {task.description && (
-                        <p className="text-xs text-slate-400 truncate mt-0.5">
+                        <p className="text-xs text-[#567C8D] truncate mt-0.5">
                           {task.description}
                         </p>
                       )}
@@ -302,8 +302,8 @@ export const ProjectDetailPage: React.FC = () => {
                     <Badge type="status" value={task.status} />
 
                     {task.dueDate && (
-                      <span className="hidden sm:inline-flex items-center space-x-1 text-xs text-slate-400">
-                        <Calendar className="w-3 h-3 text-slate-500" />
+                      <span className="hidden sm:inline-flex items-center space-x-1 text-xs text-[#567C8D]">
+                        <Calendar className="w-3 h-3 text-[#8A9BA8]" />
                         <span>{new Date(task.dueDate).toLocaleDateString()}</span>
                       </span>
                     )}
@@ -311,13 +311,13 @@ export const ProjectDetailPage: React.FC = () => {
                     <div className="flex items-center space-x-1">
                       <button
                         onClick={() => openEditTaskModal(task)}
-                        className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                        className="p-1.5 rounded-lg text-[#567C8D] hover:text-[#2F4156] hover:bg-[#EBF2F5] transition"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => handleDeleteTask(task.id)}
-                        className="p-1 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition"
+                        className="p-1.5 rounded-lg text-[#B46A72] hover:bg-[#F9ECEE] transition"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -330,19 +330,19 @@ export const ProjectDetailPage: React.FC = () => {
         )}
       </div>
 
-      {/* Project Activity Timeline */}
-      <div className="glass-card rounded-2xl p-6 border border-slate-800">
-        <h2 className="text-base font-bold text-white mb-4">Project Activity Log</h2>
+      {/* Activity Log */}
+      <div className="glass-card rounded-2xl p-6 border border-[#E7DFD7]">
+        <h2 className="text-base font-bold text-[#2F4156] mb-4">Project Activity Log</h2>
         {activities.length === 0 ? (
-          <p className="text-xs text-slate-500 py-3 text-center">No activity logged for this project yet.</p>
+          <p className="text-xs text-[#8A9BA8] py-3 text-center">No activity logged for this project yet.</p>
         ) : (
           <div className="space-y-3">
             {activities.map((act) => (
               <div key={act.id} className="flex items-start space-x-3 text-xs">
-                <div className="w-2 h-2 rounded-full bg-indigo-400 mt-1.5 flex-shrink-0" />
+                <div className="w-2 h-2 rounded-full bg-[#567C8D] mt-1.5 flex-shrink-0" />
                 <div className="flex-1">
-                  <p className="text-slate-200 font-medium">{act.message}</p>
-                  <p className="text-slate-500 text-[10px] mt-0.5">
+                  <p className="text-[#2F4156] font-semibold">{act.message}</p>
+                  <p className="text-[#8A9BA8] text-[10px] mt-0.5">
                     {new Date(act.createdAt).toLocaleTimeString()} &bull; {new Date(act.createdAt).toLocaleDateString()}
                   </p>
                 </div>
@@ -360,14 +360,14 @@ export const ProjectDetailPage: React.FC = () => {
       >
         <form onSubmit={handleTaskSubmit} className="space-y-4">
           {taskModalError && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center space-x-2 text-rose-400 text-xs">
+            <div className="p-3 rounded-xl bg-[#F9ECEE] border border-[#E8C6CA] flex items-center space-x-2 text-[#934E55] text-xs">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{taskModalError}</span>
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label className="block text-xs font-bold text-[#2F4156] mb-1">
               Task Title *
             </label>
             <input
@@ -376,12 +376,12 @@ export const ProjectDetailPage: React.FC = () => {
               value={taskName}
               onChange={(e) => setTaskName(e.target.value)}
               placeholder="e.g. Implement user login screen"
-              className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-emerald-500"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F5] border border-[#E7DFD7] text-[#2F4156] text-sm focus:outline-none focus:border-[#567C8D]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label className="block text-xs font-bold text-[#2F4156] mb-1">
               Description
             </label>
             <textarea
@@ -389,19 +389,19 @@ export const ProjectDetailPage: React.FC = () => {
               value={taskDesc}
               onChange={(e) => setTaskDesc(e.target.value)}
               placeholder="Detailed task criteria..."
-              className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-emerald-500"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F5] border border-[#E7DFD7] text-[#2F4156] text-sm focus:outline-none focus:border-[#567C8D]"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label className="block text-xs font-bold text-[#2F4156] mb-1">
                 Priority
               </label>
               <select
                 value={taskPriority}
                 onChange={(e) => setTaskPriority(e.target.value as TaskPriorityType)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-emerald-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F5] border border-[#E7DFD7] text-[#2F4156] text-xs focus:outline-none focus:border-[#567C8D]"
               >
                 <option value="LOW">Low</option>
                 <option value="MEDIUM">Medium</option>
@@ -410,13 +410,13 @@ export const ProjectDetailPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label className="block text-xs font-bold text-[#2F4156] mb-1">
                 Status
               </label>
               <select
                 value={taskStatus}
                 onChange={(e) => setTaskStatus(e.target.value as TaskStatusType)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-emerald-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F5] border border-[#E7DFD7] text-[#2F4156] text-xs focus:outline-none focus:border-[#567C8D]"
               >
                 <option value="PENDING">Pending</option>
                 <option value="IN_PROGRESS">In Progress</option>
@@ -426,14 +426,14 @@ export const ProjectDetailPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label className="block text-xs font-bold text-[#2F4156] mb-1">
               Due Date
             </label>
             <input
               type="date"
               value={taskDueDate}
               onChange={(e) => setTaskDueDate(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-emerald-500"
+              className="w-full px-3 py-2.5 rounded-xl bg-[#FAF7F5] border border-[#E7DFD7] text-[#2F4156] text-xs focus:outline-none focus:border-[#567C8D]"
             />
           </div>
 
@@ -441,14 +441,14 @@ export const ProjectDetailPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsTaskModalOpen(false)}
-              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition"
+              className="px-4 py-2.5 rounded-xl bg-[#FAF7F5] hover:bg-[#EBF2F5] text-[#567C8D] text-xs font-semibold transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submittingTask}
-              className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-semibold shadow-md shadow-emerald-500/20 transition disabled:opacity-50"
+              className="px-5 py-2.5 rounded-xl bg-[#2F4156] hover:bg-[#1E2C3A] text-white text-xs font-bold shadow-sm transition disabled:opacity-50"
             >
               {submittingTask ? 'Saving...' : editingTask ? 'Update Task' : 'Create Task'}
             </button>

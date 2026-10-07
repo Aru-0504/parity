@@ -2,9 +2,10 @@ import React from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { NavigationContainer, DarkTheme } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { theme } from './src/theme/colors';
 
 import { AuthProvider, useMobileAuth } from './src/context/AuthContext';
 import { NetworkBanner } from './src/components/NetworkBanner';
@@ -21,6 +22,18 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 const ProjectsStack = createNativeStackNavigator();
 
+const CustomTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: theme.canvas,
+    card: theme.card,
+    text: theme.textPrimary,
+    border: theme.border,
+    primary: theme.navy,
+  },
+};
+
 function ProjectsStackNavigator() {
   return (
     <ProjectsStack.Navigator screenOptions={{ headerShown: false }}>
@@ -36,14 +49,14 @@ function MainTabNavigator() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#0f172a',
-          borderTopColor: '#1e293b',
-          height: 60,
+          backgroundColor: '#FFFFFF',
+          borderTopColor: theme.border,
+          height: 62,
           paddingBottom: 8,
           paddingTop: 8,
         },
-        tabBarActiveTintColor: '#10b981',
-        tabBarInactiveTintColor: '#64748b',
+        tabBarActiveTintColor: theme.navy,
+        tabBarInactiveTintColor: theme.teal,
       }}
     >
       <Tab.Screen
@@ -80,13 +93,13 @@ function AppNavigator() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#10b981" />
+        <ActivityIndicator size="large" color={theme.navy} />
       </View>
     );
   }
 
   return (
-    <NavigationContainer theme={DarkTheme}>
+    <NavigationContainer theme={CustomTheme}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
           <Stack.Screen name="Main" component={MainTabNavigator} />
@@ -105,7 +118,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
         <NetworkBanner />
         <AuthProvider>
           <AppNavigator />
@@ -118,11 +131,11 @@ export default function App() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#090d16',
+    backgroundColor: theme.canvas,
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#090d16',
+    backgroundColor: theme.canvas,
     justifyContent: 'center',
     alignItems: 'center',
   },

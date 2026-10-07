@@ -13,6 +13,7 @@ import {
 import { useMobileAuth } from '../context/AuthContext';
 import { mobileApiClient } from '../api/client';
 import { FolderKanban, LogIn, Sparkles } from 'lucide-react-native';
+import { theme } from '../theme/colors';
 
 export const LoginScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
@@ -129,7 +130,7 @@ export const LoginScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#090d16',
+    backgroundColor: theme.canvas,
   },
   scrollContent: {
     flexGrow: 1,
@@ -144,66 +145,71 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 20,
-    backgroundColor: '#10b981',
+    backgroundColor: theme.navy,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
-    shadowColor: '#10b981',
-    shadowOpacity: 0.3,
+    shadowColor: theme.navy,
+    shadowOpacity: 0.15,
     shadowRadius: 10,
-    elevation: 8,
+    elevation: 4,
   },
   title: {
     fontSize: 26,
     fontWeight: '800',
-    color: '#ffffff',
+    color: theme.navy,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 13,
-    color: '#94a3b8',
+    color: theme.teal,
     marginTop: 6,
   },
   errorBox: {
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    backgroundColor: theme.rosewoodBg,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderColor: theme.rosewoodBorder,
     borderRadius: 12,
     padding: 12,
     marginBottom: 20,
   },
   errorText: {
-    color: '#f87171',
+    color: theme.rosewood,
     fontSize: 13,
     textAlign: 'center',
+    fontWeight: '600',
   },
   formCard: {
-    backgroundColor: '#111827',
+    backgroundColor: theme.card,
     borderWidth: 1,
-    borderColor: '#1e293b',
+    borderColor: theme.border,
     borderRadius: 20,
     padding: 24,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
   },
   label: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#94a3b8',
+    color: theme.teal,
     letterSpacing: 0.5,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#0b0f19',
+    backgroundColor: theme.cardSubtle,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: theme.border,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    color: '#ffffff',
+    color: theme.navy,
     fontSize: 14,
     marginBottom: 18,
   },
   loginBtn: {
-    backgroundColor: '#10b981',
+    backgroundColor: theme.navy,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
@@ -226,9 +232,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   demoBtn: {
-    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    backgroundColor: theme.skyLight,
     borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.3)',
+    borderColor: theme.sky,
     borderRadius: 14,
     paddingVertical: 12,
     alignItems: 'center',
@@ -237,7 +243,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   demoBtnText: {
-    color: '#a5b4fc',
+    color: theme.navy,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -247,11 +253,11 @@ const styles = StyleSheet.create({
     marginTop: 28,
   },
   footerText: {
-    color: '#94a3b8',
+    color: theme.teal,
     fontSize: 13,
   },
   signupText: {
-    color: '#34d399',
+    color: theme.navy,
     fontSize: 13,
     fontWeight: '700',
   },

@@ -19,7 +19,7 @@ export const NetworkBanner: React.FC = () => {
 
   return (
     <View style={styles.banner}>
-      <WifiOff size={16} color="#fbbf24" style={styles.icon} />
+      <WifiOff size={16} color="#92400E" style={styles.icon} />
       <Text style={styles.text}>
         No internet connection. Please check your network to sync data.
       </Text>
@@ -29,22 +29,22 @@ export const NetworkBanner: React.FC = () => {
 
 const styles = StyleSheet.create({
   banner: {
-    backgroundColor: '#78350f',
+    backgroundColor: '#FEF3C7',
     paddingVertical: 10,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#b45309',
+    borderBottomColor: '#FDE68A',
   },
   icon: {
     marginRight: 8,
   },
   text: {
-    color: '#fef3c7',
+    color: '#92400E',
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
     flexShrink: 1,
   },
 });

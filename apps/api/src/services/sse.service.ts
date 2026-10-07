@@ -7,9 +7,12 @@ class SSEService {
 
   constructor() {
     // Keep-alive heartbeat every 20s
-    setInterval(() => {
+    const timer = setInterval(() => {
       this.sendHeartbeat();
     }, 20000);
+    if (typeof timer.unref === 'function') {
+      timer.unref();
+    }
   }
 
   public registerClient(userId: string, res: Response): void {
