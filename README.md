@@ -22,7 +22,7 @@
 
 ---
 
-## 📑 Table of Contents
+## Table of Contents
 1. [Monorepo Architecture](#monorepo-architecture)
 2. [Security & Design Highlights](#security--design-highlights)
 3. [Prerequisites](#prerequisites)
