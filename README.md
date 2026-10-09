@@ -13,10 +13,13 @@
 
 ### ✨ Standout Features Beyond the Spec
 1. **Live Cross-Device Sync (SSE)**: Instant sub-second real-time sync across web and mobile using Server-Sent Events (`/api/events`). When a task is added or updated on Web, it reflects live on Mobile without needing manual reload (with pull-to-refresh as a reliable fallback).
-2. **Smart Focus Queue ("What to do next?")**: Automatically ranks active tasks across all projects by urgency and priority (`HIGH` $\rightarrow$ `MEDIUM` $\rightarrow$ `LOW`).
-3. **Deterministic Project Health**: Live computation of project trajectory (`ON_TRACK`, `AT_RISK`, `OVERDUE`) based on schedule timeline and completion percentage.
-4. **Audit Trail & Activity Log**: Real-time project activity timeline recording all state changes and task completions.
-5. **Architectural Decision Records & Security Report**: Documented in [`DECISIONS.md`](file:///DECISIONS.md) and [`SECURITY.md`](file:///SECURITY.md).
+2. **Interactive Kanban Board (Web & Mobile)**: Drag-and-drop workflow on Web with reactive drop zones and quick-move status transition bars on Mobile across `PENDING`, `IN_PROGRESS`, and `COMPLETED`.
+3. **Interactive Timeline & Calendar View (Web & Mobile)**: Monthly calendar grid, 14-day date strip, and Gantt schedule overview highlighting milestones, due dates, and overdue alerts.
+4. **Offline-First Optimistic Sync Queue (Mobile)**: Persistent local storage (`expo-secure-store`) allowing instant app launch, optimistic task mutations, and automatic replay/flush when network connectivity restores.
+5. **Smart Focus Queue ("What to do next?")**: Automatically ranks active tasks across all projects by urgency and priority (`HIGH` $\rightarrow$ `MEDIUM` $\rightarrow$ `LOW`).
+6. **Deterministic Project Health**: Live computation of project trajectory (`ON_TRACK`, `AT_RISK`, `OVERDUE`) based on schedule timeline and completion percentage.
+7. **Audit Trail & Activity Log**: Real-time project activity timeline recording all state changes and task completions.
+8. **Architectural Decision Records & Security Report**: Documented in [`DECISIONS.md`](file:///DECISIONS.md) and [`SECURITY.md`](file:///SECURITY.md).
 
 ---
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LiveSyncProvider } from './context/LiveSyncContext';
+import { ToastProvider } from './context/ToastContext';
 import { Navbar } from './components/Navbar';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
@@ -15,8 +16,8 @@ const ProtectedLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#090d16] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-[#F5EFEB] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-[#2F4156] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -26,7 +27,7 @@ const ProtectedLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
   }
 
   return (
-    <div className="min-h-screen bg-transparent flex flex-col text-slate-100">
+    <div className="min-h-screen bg-[#F5EFEB] flex flex-col text-[#2F4156]">
       <Navbar />
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
@@ -40,8 +41,8 @@ const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#090d16] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-[#F5EFEB] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-[#2F4156] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -57,7 +58,8 @@ export const App: React.FC = () => {
   return (
     <AuthProvider>
       <LiveSyncProvider>
-        <BrowserRouter>
+        <ToastProvider>
+          <BrowserRouter>
         <Routes>
           {/* Public Auth routes */}
           <Route
@@ -115,6 +117,7 @@ export const App: React.FC = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+        </ToastProvider>
       </LiveSyncProvider>
     </AuthProvider>
   );

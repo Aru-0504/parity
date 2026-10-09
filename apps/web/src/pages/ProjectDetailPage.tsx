@@ -3,6 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { Badge } from '../components/Badge';
 import { Modal } from '../components/Modal';
+import { KanbanBoard } from '../components/KanbanBoard';
+import { TimelineView } from '../components/TimelineView';
 import {
   ArrowLeft,
   Calendar,
@@ -13,19 +15,25 @@ import {
   Clock,
   AlertCircle,
   Edit2,
+  LayoutGrid,
+  List,
+  CalendarDays,
 } from 'lucide-react';
 import { TaskDto, TaskPriorityType, TaskStatusType, ActivityLogDto } from '@ismo/shared';
 import { useLiveSync } from '../context/LiveSyncContext';
+import { useToast } from '../context/ToastContext';
 
 export const ProjectDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { subscribe } = useLiveSync();
+  const toast = useToast();
 
   const [project, setProject] = useState<any>(null);
   const [activities, setActivities] = useState<ActivityLogDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'kanban' | 'timeline'>('list');
 
   // Task modal state
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -101,9 +109,14 @@ export const ProjectDetailPage: React.FC = () => {
       const newStatus: TaskStatusType =
         task.status === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
       await apiClient.put(`/tasks/${task.id}`, { status: newStatus });
+      toast.success(
+        newStatus === 'COMPLETED'
+          ? `Completed "${task.name}"`
+          : `Reopened "${task.name}"`
+      );
       fetchProjectDetails();
-    } catch (err) {
-      console.error('Failed to toggle status', err);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to update task');
     }
   };
 
@@ -111,9 +124,29 @@ export const ProjectDetailPage: React.FC = () => {
     if (!window.confirm('Delete this task?')) return;
     try {
       await apiClient.delete(`/tasks/${taskId}`);
+      toast.info('Task deleted successfully');
       fetchProjectDetails();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to delete task');
+      toast.error(err.response?.data?.message || 'Failed to delete task');
+    }
+  };
+
+  const handleMoveTask = async (taskId: string, newStatus: TaskStatusType) => {
+    try {
+      if (project && project.tasks) {
+        setProject({
+          ...project,
+          tasks: project.tasks.map((t: any) =>
+            t.id === taskId ? { ...t, status: newStatus } : t
+          ),
+        });
+      }
+      await apiClient.put(`/tasks/${taskId}`, { status: newStatus });
+      toast.success(`Task moved to ${newStatus.replace('_', ' ')}`);
+      fetchProjectDetails();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to move task');
+      fetchProjectDetails();
     }
   };
 
@@ -134,14 +167,18 @@ export const ProjectDetailPage: React.FC = () => {
 
       if (editingTask) {
         await apiClient.put(`/tasks/${editingTask.id}`, payload);
+        toast.success(`Task "${taskName}" updated successfully`);
       } else {
         await apiClient.post('/tasks', payload);
+        toast.success(`Task "${taskName}" created successfully`);
       }
 
       setIsTaskModalOpen(false);
       fetchProjectDetails();
     } catch (err: any) {
-      setTaskModalError(err.response?.data?.message || 'Failed to save task');
+      const msg = err.response?.data?.message || 'Failed to save task';
+      setTaskModalError(msg);
+      toast.error(msg);
     } finally {
       setSubmittingTask(false);
     }
@@ -150,20 +187,20 @@ export const ProjectDetailPage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-4 border-[#2F4156] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   if (error || !project) {
     return (
-      <div className="glass-card rounded-2xl p-8 text-center max-w-lg mx-auto border border-rose-500/30">
-        <AlertCircle className="w-10 h-10 text-rose-400 mx-auto mb-3" />
-        <h2 className="text-lg font-bold text-white mb-2">Access Error</h2>
-        <p className="text-slate-400 text-xs mb-6">{error}</p>
+      <div className="glass-card rounded-2xl p-8 text-center max-w-lg mx-auto border border-[#E8C6CA]">
+        <AlertCircle className="w-10 h-10 text-[#B46A72] mx-auto mb-3" />
+        <h2 className="text-lg font-bold text-[#2F4156] mb-2">Access Error</h2>
+        <p className="text-[#567C8D] text-xs mb-6">{error}</p>
         <Link
           to="/projects"
-          className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold"
+          className="px-4 py-2 rounded-xl bg-[#2F4156] hover:bg-[#1E2C3A] text-white text-xs font-semibold"
         >
           Return to Projects
         </Link>
@@ -241,13 +278,67 @@ export const ProjectDetailPage: React.FC = () => {
       </div>
 
       {/* Tasks List */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-[#2F4156] tracking-tight">Project Tasks</h2>
-          <span className="text-xs text-[#567C8D]">{totalCount} tasks total</span>
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center space-x-2">
+            <h2 className="text-lg font-bold text-[#2F4156] tracking-tight">Project Tasks</h2>
+            <span className="text-xs text-[#567C8D] font-medium">({totalCount} total)</span>
+          </div>
+
+          {/* View Mode Switcher */}
+          <div className="flex items-center bg-[#E7DFD7]/60 p-1 rounded-xl self-start sm:self-auto">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 ${
+                viewMode === 'list'
+                  ? 'bg-white text-[#2F4156] shadow-sm'
+                  : 'text-[#567C8D] hover:text-[#2F4156]'
+              }`}
+            >
+              <List className="w-3.5 h-3.5" />
+              <span>List</span>
+            </button>
+            <button
+              onClick={() => setViewMode('kanban')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 ${
+                viewMode === 'kanban'
+                  ? 'bg-white text-[#2F4156] shadow-sm'
+                  : 'text-[#567C8D] hover:text-[#2F4156]'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Board</span>
+            </button>
+            <button
+              onClick={() => setViewMode('timeline')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 ${
+                viewMode === 'timeline'
+                  ? 'bg-white text-[#2F4156] shadow-sm'
+                  : 'text-[#567C8D] hover:text-[#2F4156]'
+              }`}
+            >
+              <CalendarDays className="w-3.5 h-3.5" />
+              <span>Timeline</span>
+            </button>
+          </div>
         </div>
 
-        {project.tasks?.length === 0 ? (
+        {viewMode === 'kanban' ? (
+          <KanbanBoard
+            tasks={project.tasks || []}
+            onMoveTask={handleMoveTask}
+            onEditTask={openEditTaskModal}
+            onDeleteTask={handleDeleteTask}
+            onToggleStatus={handleToggleTaskStatus}
+          />
+        ) : viewMode === 'timeline' ? (
+          <TimelineView
+            tasks={project.tasks || []}
+            onEditTask={openEditTaskModal}
+            onDeleteTask={handleDeleteTask}
+            onToggleStatus={handleToggleTaskStatus}
+          />
+        ) : project.tasks?.length === 0 ? (
           <div className="text-center py-12 glass-card rounded-2xl border border-[#E7DFD7]">
             <Clock className="w-10 h-10 text-[#8A9BA8] mx-auto mb-2" />
             <p className="text-sm font-semibold text-[#2F4156]">No tasks yet</p>

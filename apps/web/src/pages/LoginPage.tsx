@@ -42,9 +42,11 @@ export const LoginPage: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center p-4 bg-[#F5EFEB] relative overflow-hidden">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex w-14 h-14 rounded-2xl bg-[#2F4156] items-center justify-center shadow-lg shadow-[#2F4156]/20 mb-4">
-            <FolderKanban className="w-8 h-8 text-[#C8D9E6]" />
-          </div>
+          <img
+            src="/favicon.png"
+            alt="Parity Logo"
+            className="w-16 h-16 mx-auto rounded-2xl object-contain shadow-md mb-4"
+          />
           <h1 className="text-3xl font-extrabold text-[#2F4156] tracking-tight">Sign in to Parity</h1>
           <p className="text-[#567C8D] mt-2 text-sm">Unified cross-platform project & task management</p>
         </div>

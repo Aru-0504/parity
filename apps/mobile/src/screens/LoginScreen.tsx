@@ -9,10 +9,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { useMobileAuth } from '../context/AuthContext';
 import { mobileApiClient } from '../api/client';
-import { FolderKanban, LogIn, Sparkles } from 'lucide-react-native';
+import { LogIn, Sparkles } from 'lucide-react-native';
 import { theme } from '../theme/colors';
 
 export const LoginScreen = ({ navigation }: any) => {
@@ -61,7 +62,11 @@ export const LoginScreen = ({ navigation }: any) => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <View style={styles.iconContainer}>
-            <FolderKanban size={32} color="#ffffff" />
+            <Image
+              source={require('../../assets/icon.png')}
+              style={{ width: 44, height: 44, borderRadius: 10 }}
+              resizeMode="contain"
+            />
           </View>
           <Text style={styles.title}>Parity</Text>
           <Text style={styles.subtitle}>Mobile Project & Task Management</Text>

@@ -9,6 +9,10 @@ import {
   Modal,
   TextInput,
   Alert,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { mobileApiClient } from '../api/client';
 import {
@@ -20,9 +24,15 @@ import {
   X,
   Clock,
   ArrowLeft,
+  LayoutGrid,
+  List as ListIcon,
+  CalendarDays,
 } from 'lucide-react-native';
-import { TaskDto } from '@ismo/shared';
+import { TaskDto, TaskStatusType } from '@ismo/shared';
 import { theme } from '../theme/colors';
+import { MobileKanbanBoard } from '../components/KanbanBoard';
+import { MobileTimelineCalendarView } from '../components/TimelineCalendarView';
+import { enqueueMutation } from '../services/offlineQueue';
 
 export const ProjectDetailScreen = ({ route, navigation }: any) => {
   const { id } = route.params;
@@ -30,6 +40,7 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
   const [project, setProject] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'kanban' | 'timeline'>('list');
 
   // Modal State
   const [modalVisible, setModalVisible] = useState(false);
@@ -74,12 +85,33 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
   };
 
   const handleToggleTask = async (task: TaskDto) => {
+    const newStatus: TaskStatusType =
+      task.status === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
+    await handleMoveTask(task.id, newStatus);
+  };
+
+  const handleMoveTask = async (taskId: string, newStatus: TaskStatusType) => {
+    // Optimistic UI update
+    if (project && project.tasks) {
+      setProject({
+        ...project,
+        tasks: project.tasks.map((t: any) =>
+          t.id === taskId ? { ...t, status: newStatus } : t
+        ),
+      });
+    }
+
     try {
-      const newStatus = task.status === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
-      await mobileApiClient.put(`/tasks/${task.id}`, { status: newStatus });
-      fetchProjectDetails();
+      await mobileApiClient.put(`/tasks/${taskId}`, { status: newStatus });
     } catch (err) {
-      console.error('Failed to toggle status', err);
+      console.warn('Network toggle failed, queueing offline mutation');
+      await enqueueMutation({
+        type: 'UPDATE_TASK',
+        endpoint: `/tasks/${taskId}`,
+        method: 'PUT',
+        payload: { status: newStatus },
+        taskName: project?.tasks?.find((t: any) => t.id === taskId)?.name,
+      });
     }
   };
 
@@ -90,11 +122,21 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
         text: 'Delete',
         style: 'destructive',
         onPress: async () => {
+          if (project && project.tasks) {
+            setProject({
+              ...project,
+              tasks: project.tasks.filter((t: any) => t.id !== taskId),
+            });
+          }
           try {
             await mobileApiClient.delete(`/tasks/${taskId}`);
-            fetchProjectDetails();
           } catch (e: any) {
-            Alert.alert('Error', e.response?.data?.message || 'Could not delete task');
+            console.warn('Network delete failed, queueing offline mutation');
+            await enqueueMutation({
+              type: 'DELETE_TASK',
+              endpoint: `/tasks/${taskId}`,
+              method: 'DELETE',
+            });
           }
         },
       },
@@ -108,15 +150,16 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
     }
 
     setSubmitting(true);
-    try {
-      const res = await mobileApiClient.post('/tasks', {
-        projectId: id,
-        name: taskName.trim(),
-        description: taskDesc.trim() || null,
-        priority,
-        status,
-      });
+    const newTaskPayload = {
+      projectId: id,
+      name: taskName.trim(),
+      description: taskDesc.trim() || null,
+      priority,
+      status,
+    };
 
+    try {
+      const res = await mobileApiClient.post('/tasks', newTaskPayload);
       if (res.data.success) {
         setModalVisible(false);
         setTaskName('');
@@ -126,7 +169,41 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
         fetchProjectDetails();
       }
     } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.message || 'Failed to create task');
+      console.warn('Network task create failed, queueing offline mutation');
+      // Optimistic local add
+      const optimisticTask: TaskDto = {
+        id: 'opt_' + Date.now(),
+        projectId: id,
+        name: newTaskPayload.name,
+        description: newTaskPayload.description,
+        priority: newTaskPayload.priority,
+        status: newTaskPayload.status,
+        dueDate: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      if (project && project.tasks) {
+        setProject({
+          ...project,
+          tasks: [optimisticTask, ...project.tasks],
+        });
+      }
+
+      await enqueueMutation({
+        type: 'CREATE_TASK',
+        endpoint: '/tasks',
+        method: 'POST',
+        payload: newTaskPayload,
+        taskName: newTaskPayload.name,
+      });
+
+      setModalVisible(false);
+      setTaskName('');
+      setTaskDesc('');
+      setPriority('MEDIUM');
+      setStatus('PENDING');
+      Alert.alert('Offline Mode', 'Task saved locally and queued for synchronization.');
     } finally {
       setSubmitting(false);
     }
@@ -233,36 +310,84 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
       </View>
 
       <FlatList
-        data={tasks}
+        data={viewMode === 'list' ? tasks : []}
         keyExtractor={(item) => item.id}
         refreshing={refreshing}
         onRefresh={onRefresh}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
-          <View style={styles.summaryCard}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-              <Text style={styles.projectTitle}>{project?.name}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                {getHealthBadge(project?.health)}
-                {getStatusBadge(project?.status)}
+          <>
+            <View style={styles.summaryCard}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                <Text style={styles.projectTitle}>{project?.name}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  {getHealthBadge(project?.health)}
+                  {getStatusBadge(project?.status)}
+                </View>
               </View>
-            </View>
-            {project?.description ? (
-              <Text style={styles.projectDesc}>{project.description}</Text>
-            ) : null}
+              {project?.description ? (
+                <Text style={styles.projectDesc}>{project.description}</Text>
+              ) : null}
 
-            <View style={styles.progressBarWrapper}>
-              <View style={styles.progressLabelRow}>
-                <Text style={styles.progressLabel}>
-                  Progress ({completed}/{tasks.length})
-                </Text>
-                <Text style={styles.progressPercent}>{progressPercent}%</Text>
+              <View style={styles.progressBarWrapper}>
+                <View style={styles.progressLabelRow}>
+                  <Text style={styles.progressLabel}>
+                    Progress ({completed}/{tasks.length})
+                  </Text>
+                  <Text style={styles.progressPercent}>{progressPercent}%</Text>
+                </View>
+                <View style={styles.progressBarBg}>
+                  <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
+                </View>
               </View>
-              <View style={styles.progressBarBg}>
-                <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
+
+              {/* View Mode Switcher */}
+              <View style={styles.viewSwitcher}>
+                <TouchableOpacity
+                  onPress={() => setViewMode('list')}
+                  style={[styles.switchBtn, viewMode === 'list' && styles.switchBtnActive]}
+                >
+                  <ListIcon size={12} color={viewMode === 'list' ? theme.navy : theme.teal} />
+                  <Text style={[styles.switchText, viewMode === 'list' && styles.switchTextActive]}>
+                    List
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setViewMode('kanban')}
+                  style={[styles.switchBtn, viewMode === 'kanban' && styles.switchBtnActive]}
+                >
+                  <LayoutGrid size={12} color={viewMode === 'kanban' ? theme.navy : theme.teal} />
+                  <Text style={[styles.switchText, viewMode === 'kanban' && styles.switchTextActive]}>
+                    Board
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setViewMode('timeline')}
+                  style={[styles.switchBtn, viewMode === 'timeline' && styles.switchBtnActive]}
+                >
+                  <CalendarDays size={12} color={viewMode === 'timeline' ? theme.navy : theme.teal} />
+                  <Text style={[styles.switchText, viewMode === 'timeline' && styles.switchTextActive]}>
+                    Timeline
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
-          </View>
+
+            {viewMode === 'kanban' && (
+              <MobileKanbanBoard
+                tasks={tasks}
+                onMoveTask={handleMoveTask}
+                onDeleteTask={handleDeleteTask}
+              />
+            )}
+
+            {viewMode === 'timeline' && (
+              <MobileTimelineCalendarView
+                tasks={tasks}
+                onToggleStatus={handleToggleTask}
+              />
+            )}
+          </>
         }
         ListFooterComponent={
           <View style={styles.activityContainer}>
@@ -285,11 +410,13 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
           </View>
         }
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Clock size={40} color={theme.sky} />
-            <Text style={styles.emptyTitle}>No Tasks Yet</Text>
-            <Text style={styles.emptySubtitle}>Tap 'Add Task' to plan activities</Text>
-          </View>
+          viewMode === 'list' ? (
+            <View style={styles.emptyContainer}>
+              <Clock size={40} color={theme.sky} />
+              <Text style={styles.emptyTitle}>No Tasks Yet</Text>
+              <Text style={styles.emptySubtitle}>Tap 'Add Task' to plan activities</Text>
+            </View>
+          ) : null
         }
         renderItem={({ item }) => {
           const isDone = item.status === 'COMPLETED';
@@ -341,78 +468,91 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
       />
 
       {/* Create Task Modal */}
-      <Modal visible={modalVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
+      <Modal visible={modalVisible} animationType="slide" transparent onRequestClose={() => setModalVisible(false)}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalOverlay}
+        >
+          <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+            <View style={styles.modalBackdrop} />
+          </TouchableWithoutFeedback>
+
           <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add Task to Project</Text>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <X size={20} color={theme.teal} />
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.modalLabel}>TASK TITLE *</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="e.g. Verify Android Keystore storage"
-              placeholderTextColor={theme.textMuted}
-              value={taskName}
-              onChangeText={setTaskName}
-            />
-
-            <Text style={styles.modalLabel}>DESCRIPTION</Text>
-            <TextInput
-              style={[styles.modalInput, { height: 70, textAlignVertical: 'top' }]}
-              placeholder="Task instructions..."
-              placeholderTextColor={theme.textMuted}
-              multiline
-              value={taskDesc}
-              onChangeText={setTaskDesc}
-            />
-
-            <Text style={styles.modalLabel}>PRIORITY</Text>
-            <View style={styles.choiceRow}>
-              {(['LOW', 'MEDIUM', 'HIGH'] as const).map((pr) => (
-                <TouchableOpacity
-                  key={pr}
-                  onPress={() => setPriority(pr)}
-                  style={[styles.choiceBtn, priority === pr && styles.choiceBtnActive]}
-                >
-                  <Text style={[styles.choiceText, priority === pr && styles.choiceTextActive]}>
-                    {pr}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <Text style={styles.modalLabel}>STATUS</Text>
-            <View style={styles.choiceRow}>
-              {(['PENDING', 'IN_PROGRESS', 'COMPLETED'] as const).map((st) => (
-                <TouchableOpacity
-                  key={st}
-                  onPress={() => setStatus(st)}
-                  style={[styles.choiceBtn, status === st && styles.choiceBtnActive]}
-                >
-                  <Text style={[styles.choiceText, status === st && styles.choiceTextActive]}>
-                    {st === 'PENDING' ? 'Pending' : st === 'IN_PROGRESS' ? 'In Progress' : 'Done'}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <TouchableOpacity
-              style={[styles.submitBtn, submitting && { opacity: 0.6 }]}
-              onPress={handleCreateTask}
-              disabled={submitting}
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 10 }}
             >
-              {submitting ? (
-                <ActivityIndicator color="#ffffff" />
-              ) : (
-                <Text style={styles.submitBtnText}>Add Task</Text>
-              )}
-            </TouchableOpacity>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Add Task to Project</Text>
+                <TouchableOpacity onPress={() => setModalVisible(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <X size={20} color={theme.teal} />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.modalLabel}>TASK TITLE *</Text>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="e.g. Verify Android Keystore storage"
+                placeholderTextColor={theme.textMuted}
+                value={taskName}
+                onChangeText={setTaskName}
+              />
+
+              <Text style={styles.modalLabel}>DESCRIPTION</Text>
+              <TextInput
+                style={[styles.modalInput, { height: 70, textAlignVertical: 'top' }]}
+                placeholder="Task instructions..."
+                placeholderTextColor={theme.textMuted}
+                multiline
+                value={taskDesc}
+                onChangeText={setTaskDesc}
+              />
+
+              <Text style={styles.modalLabel}>PRIORITY</Text>
+              <View style={styles.choiceRow}>
+                {(['LOW', 'MEDIUM', 'HIGH'] as const).map((pr) => (
+                  <TouchableOpacity
+                    key={pr}
+                    onPress={() => setPriority(pr)}
+                    style={[styles.choiceBtn, priority === pr && styles.choiceBtnActive]}
+                  >
+                    <Text style={[styles.choiceText, priority === pr && styles.choiceTextActive]}>
+                      {pr}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.modalLabel}>STATUS</Text>
+              <View style={styles.choiceRow}>
+                {(['PENDING', 'IN_PROGRESS', 'COMPLETED'] as const).map((st) => (
+                  <TouchableOpacity
+                    key={st}
+                    onPress={() => setStatus(st)}
+                    style={[styles.choiceBtn, status === st && styles.choiceBtnActive]}
+                  >
+                    <Text style={[styles.choiceText, status === st && styles.choiceTextActive]}>
+                      {st === 'PENDING' ? 'Pending' : st === 'IN_PROGRESS' ? 'In Progress' : 'Done'}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <TouchableOpacity
+                style={[styles.submitBtn, submitting && { opacity: 0.6 }]}
+                onPress={handleCreateTask}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <ActivityIndicator color="#ffffff" />
+                ) : (
+                  <Text style={styles.submitBtnText}>Add Task</Text>
+                )}
+              </TouchableOpacity>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -518,6 +658,38 @@ const styles = StyleSheet.create({
     backgroundColor: theme.sage,
     borderRadius: 3,
   },
+  viewSwitcher: {
+    flexDirection: 'row',
+    backgroundColor: '#E7DFD7',
+    borderRadius: 10,
+    padding: 3,
+    marginTop: 14,
+  },
+  switchBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 6,
+    borderRadius: 7,
+    gap: 4,
+  },
+  switchBtnActive: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  switchText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: theme.teal,
+  },
+  switchTextActive: {
+    color: theme.navy,
+  },
   taskCard: {
     backgroundColor: theme.card,
     borderWidth: 1,
@@ -604,13 +776,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'flex-end',
   },
+  modalBackdrop: {
+    flex: 1,
+  },
   modalContent: {
     backgroundColor: theme.card,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
+    paddingBottom: Platform.OS === 'ios' ? 36 : 24,
     borderTopWidth: 1,
     borderTopColor: theme.border,
+    maxHeight: '88%',
   },
   modalHeader: {
     flexDirection: 'row',

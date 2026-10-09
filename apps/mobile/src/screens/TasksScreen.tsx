@@ -19,9 +19,19 @@ import {
   Trash2,
   X,
   CheckSquare,
+  LayoutGrid,
+  List as ListIcon,
+  CalendarDays,
 } from 'lucide-react-native';
-import { TaskDto } from '@ismo/shared';
+import { TaskDto, TaskStatusType, ProjectDto } from '@ismo/shared';
 import { theme } from '../theme/colors';
+import { MobileKanbanBoard } from '../components/KanbanBoard';
+import { MobileTimelineCalendarView } from '../components/TimelineCalendarView';
+import {
+  getCachedTasks,
+  setCachedTasks,
+  enqueueMutation,
+} from '../services/offlineQueue';
 
 const STATUS_FILTERS = [
   { label: 'All Status', value: '' },
@@ -39,8 +49,12 @@ const PRIORITY_FILTERS = [
 
 export const TasksScreen = () => {
   const [tasks, setTasks] = useState<TaskDto[]>([]);
+  const [projects, setProjects] = useState<ProjectDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'kanban' | 'timeline'>('list');
+
+  // Filters
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
@@ -52,12 +66,29 @@ export const TasksScreen = () => {
       if (statusFilter) params.status = statusFilter;
       if (priorityFilter) params.priority = priorityFilter;
 
-      const res = await mobileApiClient.get('/tasks', { params });
-      if (res.data.success) {
-        setTasks(res.data.data);
+      const [res, projRes] = await Promise.allSettled([
+        mobileApiClient.get('/tasks', { params }),
+        mobileApiClient.get('/projects'),
+      ]);
+
+      if (res.status === 'fulfilled' && res.value.data.success) {
+        setTasks(res.value.data.data);
+        await setCachedTasks(res.value.data.data);
+      } else {
+        // Fallback to offline cache
+        const cached = await getCachedTasks();
+        if (cached && cached.length > 0) {
+          setTasks(cached);
+        }
+      }
+
+      if (projRes.status === 'fulfilled' && projRes.value.data.success) {
+        setProjects(projRes.value.data.data);
       }
     } catch (err) {
-      console.error('Failed to fetch tasks', err);
+      console.warn('Network fetch error, loading from offline cache', err);
+      const cached = await getCachedTasks();
+      if (cached) setTasks(cached);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -74,12 +105,28 @@ export const TasksScreen = () => {
   };
 
   const handleToggleTask = async (task: TaskDto) => {
+    const newStatus: TaskStatusType =
+      task.status === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
+    await handleMoveTask(task.id, newStatus);
+  };
+
+  const handleMoveTask = async (taskId: string, newStatus: TaskStatusType) => {
+    // Optimistic UI update
+    const updated = tasks.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t));
+    setTasks(updated);
+    await setCachedTasks(updated);
+
     try {
-      const newStatus = task.status === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
-      await mobileApiClient.put(`/tasks/${task.id}`, { status: newStatus });
-      fetchTasks();
+      await mobileApiClient.put(`/tasks/${taskId}`, { status: newStatus });
     } catch (err) {
-      console.error('Failed to toggle status', err);
+      console.warn('Network request failed, queueing offline mutation');
+      await enqueueMutation({
+        type: 'UPDATE_TASK',
+        endpoint: `/tasks/${taskId}`,
+        method: 'PUT',
+        payload: { status: newStatus },
+        taskName: tasks.find((t) => t.id === taskId)?.name,
+      });
     }
   };
 
@@ -90,11 +137,20 @@ export const TasksScreen = () => {
         text: 'Delete',
         style: 'destructive',
         onPress: async () => {
+          // Optimistic UI update
+          const updated = tasks.filter((t) => t.id !== taskId);
+          setTasks(updated);
+          await setCachedTasks(updated);
+
           try {
             await mobileApiClient.delete(`/tasks/${taskId}`);
-            fetchTasks();
           } catch (e: any) {
-            Alert.alert('Error', e.response?.data?.message || 'Could not delete task');
+            console.warn('Network delete failed, queueing offline mutation');
+            await enqueueMutation({
+              type: 'DELETE_TASK',
+              endpoint: `/tasks/${taskId}`,
+              method: 'DELETE',
+            });
           }
         },
       },
@@ -124,65 +180,117 @@ export const TasksScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Search Input */}
-      <View style={styles.searchContainer}>
-        <Search size={16} color={theme.teal} style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search tasks by name..."
-          placeholderTextColor={theme.textMuted}
-          value={search}
-          onChangeText={setSearch}
-        />
-        {search.length > 0 && (
-          <TouchableOpacity onPress={() => setSearch('')}>
-            <X size={16} color={theme.teal} />
+      {/* Top Header & View Mode Switcher */}
+      <View style={styles.headerBar}>
+        <View style={styles.viewSwitcher}>
+          <TouchableOpacity
+            onPress={() => setViewMode('list')}
+            style={[styles.switchBtn, viewMode === 'list' && styles.switchBtnActive]}
+          >
+            <ListIcon size={14} color={viewMode === 'list' ? theme.navy : theme.teal} />
+            <Text style={[styles.switchText, viewMode === 'list' && styles.switchTextActive]}>
+              List
+            </Text>
           </TouchableOpacity>
-        )}
+
+          <TouchableOpacity
+            onPress={() => setViewMode('kanban')}
+            style={[styles.switchBtn, viewMode === 'kanban' && styles.switchBtnActive]}
+          >
+            <LayoutGrid size={14} color={viewMode === 'kanban' ? theme.navy : theme.teal} />
+            <Text style={[styles.switchText, viewMode === 'kanban' && styles.switchTextActive]}>
+              Board
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setViewMode('timeline')}
+            style={[styles.switchBtn, viewMode === 'timeline' && styles.switchBtnActive]}
+          >
+            <CalendarDays size={14} color={viewMode === 'timeline' ? theme.navy : theme.teal} />
+            <Text style={[styles.switchText, viewMode === 'timeline' && styles.switchTextActive]}>
+              Timeline
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Filter Horizontal Scroll */}
-      <View style={styles.filterSection}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 6 }}>
-          {STATUS_FILTERS.map((s) => {
-            const active = statusFilter === s.value;
-            return (
-              <TouchableOpacity
-                key={s.label}
-                onPress={() => setStatusFilter(s.value)}
-                style={[styles.filterPill, active && styles.filterPillActive]}
-              >
-                <Text style={[styles.filterText, active && styles.filterTextActive]}>
-                  {s.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+      {/* Search Input (visible in List and Kanban mode) */}
+      {viewMode !== 'timeline' && (
+        <View style={styles.searchContainer}>
+          <Search size={16} color={theme.teal} style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search tasks by name..."
+            placeholderTextColor={theme.textMuted}
+            value={search}
+            onChangeText={setSearch}
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch('')}>
+              <X size={16} color={theme.teal} />
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {PRIORITY_FILTERS.map((p) => {
-            const active = priorityFilter === p.value;
-            return (
-              <TouchableOpacity
-                key={p.label}
-                onPress={() => setPriorityFilter(p.value)}
-                style={[styles.filterPill, active && styles.filterPillActive]}
-              >
-                <Text style={[styles.filterText, active && styles.filterTextActive]}>
-                  {p.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
+      {/* Filter Horizontal Scroll (in List view) */}
+      {viewMode === 'list' && (
+        <View style={styles.filterSection}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 6 }}>
+            {STATUS_FILTERS.map((s) => {
+              const active = statusFilter === s.value;
+              return (
+                <TouchableOpacity
+                  key={s.label}
+                  onPress={() => setStatusFilter(s.value)}
+                  style={[styles.filterPill, active && styles.filterPillActive]}
+                >
+                  <Text style={[styles.filterText, active && styles.filterTextActive]}>
+                    {s.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
 
-      {/* Tasks List */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {PRIORITY_FILTERS.map((p) => {
+              const active = priorityFilter === p.value;
+              return (
+                <TouchableOpacity
+                  key={p.label}
+                  onPress={() => setPriorityFilter(p.value)}
+                  style={[styles.filterPill, active && styles.filterPillActive]}
+                >
+                  <Text style={[styles.filterText, active && styles.filterTextActive]}>
+                    {p.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+
+      {/* Content View Switcher */}
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={theme.navy} />
         </View>
+      ) : viewMode === 'kanban' ? (
+        <MobileKanbanBoard
+          tasks={tasks}
+          projects={projects}
+          onMoveTask={handleMoveTask}
+          onDeleteTask={handleDeleteTask}
+        />
+      ) : viewMode === 'timeline' ? (
+        <MobileTimelineCalendarView
+          tasks={tasks}
+          projects={projects}
+          onToggleStatus={handleToggleTask}
+        />
       ) : (
         <FlatList
           data={tasks}
@@ -202,29 +310,36 @@ export const TasksScreen = () => {
             </View>
           }
           renderItem={({ item }) => {
-            const isDone = item.status === 'COMPLETED';
+            const isCompleted = item.status === 'COMPLETED';
             return (
-              <View style={[styles.taskCard, isDone && styles.taskCardDone]}>
+              <View style={styles.taskCard}>
                 <TouchableOpacity
                   onPress={() => handleToggleTask(item)}
-                  style={styles.checkBtn}
+                  style={styles.checkButton}
                 >
-                  {isDone ? (
-                    <CheckCircle size={22} color={theme.sage} />
+                  {isCompleted ? (
+                    <CheckCircle size={22} color="#4E6738" />
                   ) : (
                     <Circle size={22} color={theme.teal} />
                   )}
                 </TouchableOpacity>
 
-                <View style={styles.taskInfo}>
-                  <Text style={[styles.taskTitle, isDone && styles.taskTitleDone]}>
+                <View style={styles.taskDetails}>
+                  <Text
+                    style={[
+                      styles.taskName,
+                      isCompleted && styles.taskNameCompleted,
+                    ]}
+                  >
                     {item.name}
                   </Text>
-                  {item.project ? (
-                    <Text style={styles.projectTag}>{item.project.name}</Text>
+                  {item.description ? (
+                    <Text style={styles.taskDesc} numberOfLines={2}>
+                      {item.description}
+                    </Text>
                   ) : null}
 
-                  <View style={styles.metaRow}>
+                  <View style={styles.taskMeta}>
                     {getPriorityBadge(item.priority)}
                     {item.dueDate ? (
                       <View style={styles.dateMeta}>
@@ -239,7 +354,7 @@ export const TasksScreen = () => {
 
                 <TouchableOpacity
                   onPress={() => handleDeleteTask(item.id)}
-                  style={styles.deleteBtn}
+                  style={styles.deleteButton}
                 >
                   <Trash2 size={16} color={theme.rosewood} />
                 </TouchableOpacity>
@@ -256,44 +371,76 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.canvas,
+    paddingHorizontal: 16,
+    paddingTop: 12,
   },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
+  headerBar: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  viewSwitcher: {
+    flexDirection: 'row',
+    backgroundColor: '#E7DFD7',
+    borderRadius: 12,
+    padding: 3,
+  },
+  switchBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 9,
+    gap: 5,
+  },
+  switchBtnActive: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  switchText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: theme.teal,
+  },
+  switchTextActive: {
+    color: theme.navy,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.card,
-    marginHorizontal: 16,
-    marginTop: 14,
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 44,
     borderWidth: 1,
     borderColor: theme.border,
-    paddingHorizontal: 12,
+    marginBottom: 10,
   },
   searchIcon: {
     marginRight: 8,
   },
   searchInput: {
     flex: 1,
-    paddingVertical: 10,
-    color: theme.navy,
     fontSize: 13,
+    color: theme.navy,
+    paddingVertical: 0,
   },
   filterSection: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    marginBottom: 10,
   },
   filterPill: {
     paddingHorizontal: 12,
     paddingVertical: 5,
-    borderRadius: 20,
-    backgroundColor: theme.card,
-    marginRight: 6,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: theme.border,
+    marginRight: 6,
   },
   filterPillActive: {
     backgroundColor: theme.navy,
@@ -301,96 +448,94 @@ const styles = StyleSheet.create({
   },
   filterText: {
     fontSize: 11,
-    color: theme.teal,
     fontWeight: '600',
+    color: theme.teal,
   },
   filterTextActive: {
-    color: '#ffffff',
+    color: '#FFFFFF',
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 40,
+    paddingBottom: 20,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.navy,
+    marginTop: 12,
+  },
+  emptySubtitle: {
+    fontSize: 12,
+    color: theme.textSecondary,
+    textAlign: 'center',
+    marginTop: 4,
+    paddingHorizontal: 32,
   },
   taskCard: {
-    backgroundColor: theme.card,
-    borderWidth: 1,
-    borderColor: theme.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.02,
-    shadowRadius: 6,
-    elevation: 1,
+    borderWidth: 1,
+    borderColor: theme.border,
   },
-  taskCardDone: {
-    backgroundColor: theme.cardSubtle,
-    borderColor: theme.borderLight,
-    opacity: 0.8,
+  checkButton: {
+    paddingRight: 12,
   },
-  checkBtn: {
-    marginRight: 12,
-  },
-  taskInfo: {
+  taskDetails: {
     flex: 1,
   },
-  taskTitle: {
+  taskName: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
     color: theme.navy,
+    marginBottom: 2,
   },
-  taskTitleDone: {
-    color: theme.textMuted,
+  taskNameCompleted: {
     textDecorationLine: 'line-through',
+    color: theme.textMuted,
   },
-  projectTag: {
+  taskDesc: {
     fontSize: 11,
-    color: theme.teal,
-    marginTop: 2,
-    fontWeight: '600',
+    color: theme.textSecondary,
+    marginBottom: 6,
+    lineHeight: 15,
   },
-  metaRow: {
+  taskMeta: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
+    gap: 8,
   },
   badge: {
-    paddingHorizontal: 6,
+    paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 6,
-    marginRight: 8,
   },
   badgeText: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '700',
   },
   dateMeta: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
   },
   dateText: {
-    fontSize: 10,
+    fontSize: 11,
     color: theme.textMuted,
-    marginLeft: 4,
   },
-  deleteBtn: {
-    padding: 8,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    paddingVertical: 50,
-  },
-  emptyTitle: {
-    color: theme.navy,
-    fontSize: 15,
-    fontWeight: '700',
-    marginTop: 10,
-  },
-  emptySubtitle: {
-    color: theme.teal,
-    fontSize: 12,
-    marginTop: 4,
+  deleteButton: {
+    padding: 6,
   },
 });

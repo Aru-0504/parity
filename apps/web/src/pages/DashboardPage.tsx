@@ -17,8 +17,10 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import { DashboardStats, ActivityLogDto } from '@ismo/shared';
+import { useToast } from '../context/ToastContext';
 
 export const DashboardPage: React.FC = () => {
+  const toast = useToast();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentProjects, setRecentProjects] = useState<any[]>([]);
   const [focusTasks, setFocusTasks] = useState<any[]>([]);
@@ -58,16 +60,17 @@ export const DashboardPage: React.FC = () => {
   const handleToggleTask = async (taskId: string) => {
     try {
       await apiClient.put(`/tasks/${taskId}`, { status: 'COMPLETED' });
+      toast.success('Task marked as completed');
       fetchDashboard();
-    } catch (err) {
-      console.error('Failed to complete task', err);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to complete task');
     }
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-4 border-[#2F4156] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }

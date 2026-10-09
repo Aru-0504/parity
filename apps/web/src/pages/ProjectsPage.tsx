@@ -16,8 +16,10 @@ import {
 } from 'lucide-react';
 import { ProjectDto, ProjectStatusType } from '@ismo/shared';
 import { useLiveSync } from '../context/LiveSyncContext';
+import { useToast } from '../context/ToastContext';
 
 export const ProjectsPage: React.FC = () => {
+  const toast = useToast();
   const [projects, setProjects] = useState<ProjectDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -96,9 +98,10 @@ export const ProjectsPage: React.FC = () => {
     }
     try {
       await apiClient.delete(`/projects/${id}`);
+      toast.info('Project deleted successfully');
       fetchProjects();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to delete project');
+      toast.error(err.response?.data?.message || 'Failed to delete project');
     }
   };
 
@@ -124,13 +127,17 @@ export const ProjectsPage: React.FC = () => {
 
       if (editingProject) {
         await apiClient.put(`/projects/${editingProject.id}`, payload);
+        toast.success(`Project "${name}" updated successfully`);
       } else {
         await apiClient.post('/projects', payload);
+        toast.success(`Project "${name}" created successfully`);
       }
       setIsModalOpen(false);
       fetchProjects();
     } catch (err: any) {
-      setFormError(err.response?.data?.message || 'Failed to save project');
+      const msg = err.response?.data?.message || 'Failed to save project';
+      setFormError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }

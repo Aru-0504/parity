@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { apiClient } from '../api/client';
 import { Badge } from '../components/Badge';
 import { Modal } from '../components/Modal';
+import { KanbanBoard } from '../components/KanbanBoard';
+import { TimelineView } from '../components/TimelineView';
 import {
   CheckSquare,
   Search,
@@ -13,14 +15,20 @@ import {
   Circle,
   AlertCircle,
   FolderKanban,
+  LayoutGrid,
+  List,
+  CalendarDays,
 } from 'lucide-react';
 import { TaskDto, TaskPriorityType, TaskStatusType, ProjectDto } from '@ismo/shared';
 import { useLiveSync } from '../context/LiveSyncContext';
+import { useToast } from '../context/ToastContext';
 
 export const TasksPage: React.FC = () => {
+  const toast = useToast();
   const [tasks, setTasks] = useState<TaskDto[]>([]);
   const [projects, setProjects] = useState<ProjectDto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'list' | 'kanban' | 'timeline'>('list');
   const { subscribe } = useLiveSync();
 
   // Filters
@@ -106,9 +114,29 @@ export const TasksPage: React.FC = () => {
       const newStatus: TaskStatusType =
         task.status === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
       await apiClient.put(`/tasks/${task.id}`, { status: newStatus });
+      toast.success(
+        newStatus === 'COMPLETED'
+          ? `Completed "${task.name}"`
+          : `Reopened "${task.name}"`
+      );
       fetchTasksAndProjects();
-    } catch (err) {
-      console.error('Failed to toggle status', err);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to update task');
+    }
+  };
+
+  const handleMoveTask = async (taskId: string, newStatus: TaskStatusType) => {
+    try {
+      // Optimistic update
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
+      );
+      await apiClient.put(`/tasks/${taskId}`, { status: newStatus });
+      toast.success(`Task moved to ${newStatus.replace('_', ' ')}`);
+      fetchTasksAndProjects();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to move task');
+      fetchTasksAndProjects();
     }
   };
 
@@ -116,9 +144,10 @@ export const TasksPage: React.FC = () => {
     if (!window.confirm('Delete this task?')) return;
     try {
       await apiClient.delete(`/tasks/${id}`);
+      toast.info('Task deleted successfully');
       fetchTasksAndProjects();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to delete task');
+      toast.error(err.response?.data?.message || 'Failed to delete task');
     }
   };
 
@@ -143,13 +172,17 @@ export const TasksPage: React.FC = () => {
 
       if (editingTask) {
         await apiClient.put(`/tasks/${editingTask.id}`, payload);
+        toast.success(`Task "${taskName}" updated successfully`);
       } else {
         await apiClient.post('/tasks', payload);
+        toast.success(`Task "${taskName}" created successfully`);
       }
       setIsModalOpen(false);
       fetchTasksAndProjects();
     } catch (err: any) {
-      setFormError(err.response?.data?.message || 'Failed to save task');
+      const msg = err.response?.data?.message || 'Failed to save task';
+      setFormError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -167,14 +200,56 @@ export const TasksPage: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={openCreateModal}
-          disabled={projects.length === 0}
-          className="px-4 py-2.5 rounded-xl bg-[#2F4156] hover:bg-[#1E2C3A] text-white font-semibold text-xs shadow-sm transition flex items-center justify-center space-x-2 disabled:opacity-50"
-        >
-          <CheckSquare className="w-4 h-4 text-[#C8D9E6]" />
-          <span>New Task</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          {/* View Mode Switcher */}
+          <div className="flex items-center bg-[#E7DFD7]/60 p-1 rounded-xl">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 ${
+                viewMode === 'list'
+                  ? 'bg-white text-[#2F4156] shadow-sm'
+                  : 'text-[#567C8D] hover:text-[#2F4156]'
+              }`}
+              title="List View"
+            >
+              <List className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">List</span>
+            </button>
+            <button
+              onClick={() => setViewMode('kanban')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 ${
+                viewMode === 'kanban'
+                  ? 'bg-white text-[#2F4156] shadow-sm'
+                  : 'text-[#567C8D] hover:text-[#2F4156]'
+              }`}
+              title="Kanban Board"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Board</span>
+            </button>
+            <button
+              onClick={() => setViewMode('timeline')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 ${
+                viewMode === 'timeline'
+                  ? 'bg-white text-[#2F4156] shadow-sm'
+                  : 'text-[#567C8D] hover:text-[#2F4156]'
+              }`}
+              title="Timeline & Calendar"
+            >
+              <CalendarDays className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Timeline</span>
+            </button>
+          </div>
+
+          <button
+            onClick={openCreateModal}
+            disabled={projects.length === 0}
+            className="px-4 py-2.5 rounded-xl bg-[#2F4156] hover:bg-[#1E2C3A] text-white font-semibold text-xs shadow-sm transition flex items-center justify-center space-x-2 disabled:opacity-50"
+          >
+            <CheckSquare className="w-4 h-4 text-[#C8D9E6]" />
+            <span>New Task</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter and Search Bar */}
@@ -219,11 +294,28 @@ export const TasksPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Tasks Table / List */}
+      {/* Main Content Area: List, Kanban, or Timeline */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <div className="w-8 h-8 border-4 border-[#2F4156] border-t-transparent rounded-full animate-spin"></div>
         </div>
+      ) : viewMode === 'kanban' ? (
+        <KanbanBoard
+          tasks={tasks}
+          projects={projects}
+          onMoveTask={handleMoveTask}
+          onEditTask={openEditModal}
+          onDeleteTask={handleDelete}
+          onToggleStatus={handleToggleStatus}
+        />
+      ) : viewMode === 'timeline' ? (
+        <TimelineView
+          tasks={tasks}
+          projects={projects}
+          onEditTask={openEditModal}
+          onDeleteTask={handleDelete}
+          onToggleStatus={handleToggleStatus}
+        />
       ) : tasks.length === 0 ? (
         <div className="text-center py-16 glass-card rounded-2xl border border-[#E7DFD7]">
           <CheckSquare className="w-12 h-12 text-[#8A9BA8] mx-auto mb-3" />

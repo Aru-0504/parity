@@ -5,23 +5,26 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "splash": {
-      "backgroundColor": "#090d16"
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F5EFEB"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ismo.projectpulse"
+      "bundleIdentifier": "com.ismo.parity"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#090d16"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F5EFEB"
       },
-      "package": "com.ismo.projectpulse"
+      "package": "com.ismo.parity"
     },
     "extra": {
       "eas": {
-        "projectId": "projectpulse-ismo"
+        "projectId": "parity-ismo"
       }
     }
   }

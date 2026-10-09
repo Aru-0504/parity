@@ -10,6 +10,9 @@ import {
   Modal,
   ScrollView,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { mobileApiClient } from '../api/client';
 import {
@@ -269,63 +272,76 @@ export const ProjectsScreen = ({ navigation }: any) => {
       </TouchableOpacity>
 
       {/* Create Project Modal */}
-      <Modal visible={modalVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
+      <Modal visible={modalVisible} animationType="slide" transparent onRequestClose={() => setModalVisible(false)}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalOverlay}
+        >
+          <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+            <View style={styles.modalBackdrop} />
+          </TouchableWithoutFeedback>
+
           <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Create New Project</Text>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <X size={20} color={theme.teal} />
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.modalLabel}>PROJECT NAME *</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="e.g. Android Release v1"
-              placeholderTextColor={theme.textMuted}
-              value={name}
-              onChangeText={setName}
-            />
-
-            <Text style={styles.modalLabel}>DESCRIPTION</Text>
-            <TextInput
-              style={[styles.modalInput, { height: 80, textAlignVertical: 'top' }]}
-              placeholder="Project goals & scope..."
-              placeholderTextColor={theme.textMuted}
-              multiline
-              value={description}
-              onChangeText={setDescription}
-            />
-
-            <Text style={styles.modalLabel}>STATUS</Text>
-            <View style={styles.statusPickerRow}>
-              {(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED'] as const).map((st) => (
-                <TouchableOpacity
-                  key={st}
-                  onPress={() => setStatus(st)}
-                  style={[styles.statusChoice, status === st && styles.statusChoiceActive]}
-                >
-                  <Text style={[styles.statusChoiceText, status === st && styles.statusChoiceTextActive]}>
-                    {st === 'NOT_STARTED' ? 'Not Started' : st === 'IN_PROGRESS' ? 'In Progress' : 'Done'}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <TouchableOpacity
-              style={[styles.submitBtn, submitting && { opacity: 0.6 }]}
-              onPress={handleCreateProject}
-              disabled={submitting}
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 10 }}
             >
-              {submitting ? (
-                <ActivityIndicator color="#ffffff" />
-              ) : (
-                <Text style={styles.submitBtnText}>Create Project</Text>
-              )}
-            </TouchableOpacity>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Create New Project</Text>
+                <TouchableOpacity onPress={() => setModalVisible(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <X size={20} color={theme.teal} />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.modalLabel}>PROJECT NAME *</Text>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="e.g. Android Release v1"
+                placeholderTextColor={theme.textMuted}
+                value={name}
+                onChangeText={setName}
+              />
+
+              <Text style={styles.modalLabel}>DESCRIPTION</Text>
+              <TextInput
+                style={[styles.modalInput, { height: 80, textAlignVertical: 'top' }]}
+                placeholder="Project goals & scope..."
+                placeholderTextColor={theme.textMuted}
+                multiline
+                value={description}
+                onChangeText={setDescription}
+              />
+
+              <Text style={styles.modalLabel}>STATUS</Text>
+              <View style={styles.statusPickerRow}>
+                {(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED'] as const).map((st) => (
+                  <TouchableOpacity
+                    key={st}
+                    onPress={() => setStatus(st)}
+                    style={[styles.statusChoice, status === st && styles.statusChoiceActive]}
+                  >
+                    <Text style={[styles.statusChoiceText, status === st && styles.statusChoiceTextActive]}>
+                      {st === 'NOT_STARTED' ? 'Not Started' : st === 'IN_PROGRESS' ? 'In Progress' : 'Done'}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <TouchableOpacity
+                style={[styles.submitBtn, submitting && { opacity: 0.6 }]}
+                onPress={handleCreateProject}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <ActivityIndicator color="#ffffff" />
+                ) : (
+                  <Text style={styles.submitBtnText}>Create Project</Text>
+                )}
+              </TouchableOpacity>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -483,13 +499,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'flex-end',
   },
+  modalBackdrop: {
+    flex: 1,
+  },
   modalContent: {
     backgroundColor: theme.card,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
+    paddingBottom: Platform.OS === 'ios' ? 36 : 24,
     borderTopWidth: 1,
     borderTopColor: theme.border,
+    maxHeight: '88%',
   },
   modalHeader: {
     flexDirection: 'row',
