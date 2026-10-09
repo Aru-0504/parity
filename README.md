@@ -7,11 +7,10 @@
 ![Prisma](https://img.shields.io/badge/Prisma_ORM-2D3748?logo=prisma&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?logo=postgresql&logoColor=white)
 
-**Repository**: [https://github.com/Aru-0504/parity](https://github.com/Aru-0504/parity)
 
 **Parity** is a production-grade, full-stack project management platform consisting of an **Express REST API**, a **React (Vite) Web Application**, and a **React Native (Expo) Mobile Application**, powered by a shared **PostgreSQL** database and shared TypeScript / Zod validation contracts.
 
-### ✨ Standout Features Beyond the Spec
+### Standout Features Beyond the Spec
 1. **Live Cross-Device Sync (SSE)**: Instant sub-second real-time sync across web and mobile using Server-Sent Events (`/api/events`). When a task is added or updated on Web, it reflects live on Mobile without needing manual reload (with pull-to-refresh as a reliable fallback).
 2. **Smart Focus Queue ("What to do next?")**: Automatically ranks active tasks across all projects by urgency and priority (`HIGH` $\rightarrow$ `MEDIUM` $\rightarrow$ `LOW`).
 3. **Deterministic Project Health**: Live computation of project trajectory (`ON_TRACK`, `AT_RISK`, `OVERDUE`) based on schedule timeline and completion percentage.
@@ -20,7 +19,7 @@
 
 ---
 
-## 📑 Table of Contents
+## Table of Contents
 1. [Monorepo Architecture](#monorepo-architecture)
 2. [Security & Design Highlights](#security--design-highlights)
 3. [Prerequisites](#prerequisites)
@@ -40,7 +39,7 @@
 
 ---
 
-## 🏛 Monorepo Architecture
+## Architecture
 
 ```text
 ismo-assessment/
@@ -63,7 +62,7 @@ ismo-assessment/
 
 ---
 
-## 🔒 Security & Design Highlights
+## Security & Design Highlights
 
 1. **Strict Multi-Tenant Scoping & IDOR Prevention**:
    - Every database query for projects and tasks is strictly scoped to `req.user.id`.
@@ -83,7 +82,7 @@ ismo-assessment/
 
 ---
 
-## 🛠 Prerequisites
+## Prerequisites
 
 - **Node.js**: v18+ (tested on Node v20 & v24)
 - **npm**: v9+
@@ -92,7 +91,7 @@ ismo-assessment/
 
 ---
 
-## 🚀 Quickstart Setup
+## Quickstart Setup
 
 Clone the repository and install all monorepo dependencies in one command:
 
