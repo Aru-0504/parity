@@ -276,6 +276,7 @@ Follow this 5-minute walkthrough to demonstrate end-to-end sync:
 ## Deliverable Links & References
 
 - **GitHub Repository**: [https://github.com/Aru-0504/parity](https://github.com/Aru-0504/parity)
+- **Render Deployment Guide**: [`docs/RENDER_DEPLOYMENT.md`](file:///docs/RENDER_DEPLOYMENT.md)
 - **Architecture Decisions**: [`DECISIONS.md`](file:///DECISIONS.md)
 - **Security Policy & Tests**: [`SECURITY.md`](file:///SECURITY.md)
 - **API Documentation**: [`docs/api-documentation.md`](file:///docs/api-documentation.md)

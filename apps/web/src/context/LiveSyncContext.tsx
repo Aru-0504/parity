@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import { ParityRealtimeEvent } from '@ismo/shared';
+import { API_BASE_URL } from '../api/client';
 
 interface LiveSyncContextType {
   isConnected: boolean;
@@ -26,8 +27,7 @@ export const LiveSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return;
     }
 
-    const apiBase = import.meta.env.VITE_API_URL || '/api';
-    const sseUrl = `${apiBase}/events?token=${encodeURIComponent(token)}`;
+    const sseUrl = `${API_BASE_URL}/events?token=${encodeURIComponent(token)}`;
     const eventSource = new EventSource(sseUrl);
 
     eventSource.onopen = () => {

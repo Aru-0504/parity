@@ -17,7 +17,11 @@
     "lint": "npm run lint --workspaces --if-present",
     "prisma:generate": "npm run prisma:generate --workspace=apps/api",
     "prisma:migrate": "npm run prisma:migrate --workspace=apps/api",
-    "prisma:seed": "npm run prisma:seed --workspace=apps/api"
+    "prisma:deploy": "npm run prisma:deploy --workspace=apps/api",
+    "prisma:seed": "npm run prisma:seed --workspace=apps/api",
+    "build:api": "npm run build --workspace=@ismo/shared && npm run prisma:generate && npm run build --workspace=apps/api",
+    "build:web": "npm run build --workspace=@ismo/shared && npm run build --workspace=apps/web",
+    "start:api": "npm run start --workspace=apps/api"
   },
   "devDependencies": {
     "typescript": "^5.5.4"
