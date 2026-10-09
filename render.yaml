@@ -1,8 +1,3 @@
-databases:
-  - name: parity-db
-    databaseName: project_management
-    plan: free
-
 services:
   # ---------------------------------------------------------
   # 1. Backend REST API (Node.js + Express + Prisma)
@@ -18,9 +13,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        fromDatabase:
-          name: parity-db
-          property: connectionString
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN
