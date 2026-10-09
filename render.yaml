@@ -1,7 +1,6 @@
 databases:
   - name: parity-db
     databaseName: project_management
-    user: postgres
     plan: free
 
 services:
