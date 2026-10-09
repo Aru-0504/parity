@@ -6,7 +6,7 @@ services:
     name: parity-api
     runtime: node
     plan: free
-    buildCommand: npm install --legacy-peer-deps && npm run build:api
+    buildCommand: npm install --include=dev --legacy-peer-deps && npm run build:api
     startCommand: npm run prisma:deploy && npm run start:api
     healthCheckPath: /api/health
     envVars:
@@ -27,7 +27,7 @@ services:
   - type: web
     name: parity-web
     runtime: static
-    buildCommand: npm install --legacy-peer-deps && npm run build:web
+    buildCommand: npm install --include=dev --legacy-peer-deps && npm run build:web
     staticPublishPath: ./apps/web/dist
     routes:
       - type: rewrite

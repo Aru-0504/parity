@@ -23,7 +23,7 @@
     "build:web": "npm run build --workspace=@ismo/shared && npm run build --workspace=web",
     "start:api": "node apps/api/dist/index.js"
   },
-  "devDependencies": {
+  "dependencies": {
     "typescript": "^5.5.4"
   }
 }
