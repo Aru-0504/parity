@@ -8,6 +8,17 @@ import activityRoutes from './activity.routes';
 
 const router = Router();
 
+// Root API info endpoint
+router.get('/', (req, res) => {
+  res.status(200).json({
+    name: 'Parity Project Management API',
+    status: 'online',
+    version: '1.0.0',
+    health: '/api/health',
+    endpoints: ['/api/auth', '/api/projects', '/api/tasks', '/api/dashboard', '/api/events', '/api/activity'],
+  });
+});
+
 // Health check endpoint
 router.get('/health', (req, res) => {
   res.status(200).json({
