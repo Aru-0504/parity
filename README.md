@@ -7,11 +7,10 @@
 ![Prisma](https://img.shields.io/badge/Prisma_ORM-2D3748?logo=prisma&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?logo=postgresql&logoColor=white)
 
-**Repository**: [https://github.com/Aru-0504/parity](https://github.com/Aru-0504/parity)
 
 **Parity** is a production-grade, full-stack project management platform consisting of an **Express REST API**, a **React (Vite) Web Application**, and a **React Native (Expo) Mobile Application**, powered by a shared **PostgreSQL** database and shared TypeScript / Zod validation contracts.
 
-### ✨ Standout Features Beyond the Spec
+### Standout Features Beyond the Spec
 1. **Live Cross-Device Sync (SSE)**: Instant sub-second real-time sync across web and mobile using Server-Sent Events (`/api/events`). When a task is added or updated on Web, it reflects live on Mobile without needing manual reload (with pull-to-refresh as a reliable fallback).
 2. **Interactive Kanban Board (Web & Mobile)**: Drag-and-drop workflow on Web with reactive drop zones and quick-move status transition bars on Mobile across `PENDING`, `IN_PROGRESS`, and `COMPLETED`.
 3. **Interactive Timeline & Calendar View (Web & Mobile)**: Monthly calendar grid, 14-day date strip, and Gantt schedule overview highlighting milestones, due dates, and overdue alerts.
@@ -43,7 +42,7 @@
 
 ---
 
-## 🏛 Monorepo Architecture
+## Architecture
 
 ```text
 ismo-assessment/
@@ -66,7 +65,7 @@ ismo-assessment/
 
 ---
 
-## 🔒 Security & Design Highlights
+## Security & Design Highlights
 
 1. **Strict Multi-Tenant Scoping & IDOR Prevention**:
    - Every database query for projects and tasks is strictly scoped to `req.user.id`.
@@ -86,16 +85,16 @@ ismo-assessment/
 
 ---
 
-## 🛠 Prerequisites
+## Prerequisites
 
 - **Node.js**: v18+ (tested on Node v20 & v24)
 - **npm**: v9+
-- **PostgreSQL**: Local PostgreSQL, Docker, or Cloud PostgreSQL (e.g., [Neon](https://neon.tech), [Supabase](https://supabase.com), or [Railway](https://railway.app)).
+- **PostgreSQL**: Local PostgreSQL, Docker, or Cloud PostgreSQL 
 - **Expo Go App** (for Android physical device testing) or Android Studio emulator.
 
 ---
 
-## 🚀 Quickstart Setup
+## Quickstart Setup
 
 Clone the repository and install all monorepo dependencies in one command:
 
@@ -112,7 +111,7 @@ npm run build --workspace=@ismo/shared
 
 ---
 
-## 🗄 Database Setup & Seeding
+## Database Setup & Seeding
 
 ### 1. Configure Database Connection
 Copy the environment template in `apps/api`:
@@ -170,7 +169,7 @@ npx ts-node ./apps/api/prisma/seed.ts
 
 ---
 
-## 💻 Running Locally
+## Running Locally
 
 ### 1. Backend API
 ```bash
@@ -197,7 +196,7 @@ npm run dev:mobile
 
 ---
 
-## 🐳 Docker Compose (API + PostgreSQL)
+## Docker Compose (API + PostgreSQL)
 
 To start both PostgreSQL and the API service in isolated Docker containers:
 
@@ -208,7 +207,7 @@ This initializes PostgreSQL on port 5432, waits for its health check, automatica
 
 ---
 
-## 🧪 Automated Integration Tests
+## Automated Integration Tests
 
 Run comprehensive Supertest integration tests covering authentication, input validations, date constraints, and cross-user data isolation:
 
@@ -226,7 +225,7 @@ What is tested:
 
 ---
 
-## 📱 Building the Android APK
+## Building the Android APK
 
 The mobile application is pre-configured for Expo Application Services (EAS) in `apps/mobile/eas.json`:
 
@@ -240,7 +239,7 @@ This triggers an EAS cloud build that produces a standalone `.apk` installable o
 
 ---
 
-## 📹 Cross-Platform Sync Demo Video Script
+## Cross-Platform Sync Demo Video Script
 
 Follow this 5-minute walkthrough to demonstrate end-to-end sync:
 
@@ -267,14 +266,14 @@ Follow this 5-minute walkthrough to demonstrate end-to-end sync:
 
 ---
 
-## 🏛 Architectural Decision Records & Security
+## Architectural Decision Records & Security
 
 - **Architectural Decision Records (ADRs)**: [`DECISIONS.md`](file:///DECISIONS.md) detailing why Prisma, why Monorepo, why SSE over WebSockets, and state definitions.
 - **Security & Threat Model Verification**: [`SECURITY.md`](file:///SECURITY.md) detailing bcrypt, rate limiting, and automated multi-tenant isolation proofs.
 
 ---
 
-## 📚 Deliverable Links & References
+## Deliverable Links & References
 
 - **GitHub Repository**: [https://github.com/Aru-0504/parity](https://github.com/Aru-0504/parity)
 - **Architecture Decisions**: [`DECISIONS.md`](file:///DECISIONS.md)
